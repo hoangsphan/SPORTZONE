@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Booking page time slot grid */
+.time-slot-grid {
+  grid-template-columns: 120px repeat(var(--time-slots), minmax(40px, 1fr));
+}

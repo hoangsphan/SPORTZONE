@@ -1,0 +1,101 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|c:\\users\\huangfan\\downloads\\sportzone\\sportzone_api\\models\\sportzonecontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|solutionrelative:models\\sportzonecontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|c:\\users\\huangfan\\downloads\\sportzone\\sportzone_api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|c:\\users\\huangfan\\downloads\\sportzone\\sportzone_api\\controllers\\fieldpricingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|solutionrelative:controllers\\fieldpricingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|c:\\users\\huangfan\\downloads\\sportzone\\sportzone_api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{916C24C9-C62F-F76E-8FB5-C741FB5DA529}|SportZone_API.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "FieldPricingController.cs",
+              "DocumentMoniker": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\Controllers\\FieldPricingController.cs",
+              "RelativeDocumentMoniker": "Controllers\\FieldPricingController.cs",
+              "ToolTip": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\Controllers\\FieldPricingController.cs",
+              "RelativeToolTip": "Controllers\\FieldPricingController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEQAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-11T03:32:47.506Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAACYBAAAAAAAAAAAowCoBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-10T11:29:30.975Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "SportZoneContext.cs",
+              "DocumentMoniker": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\Models\\SportZoneContext.cs",
+              "RelativeDocumentMoniker": "Models\\SportZoneContext.cs",
+              "ToolTip": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\Models\\SportZoneContext.cs",
+              "RelativeToolTip": "Models\\SportZoneContext.cs",
+              "ViewState": "AgIAADIAAAAAAAAAAAAAAEEAAABIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-02T08:20:29.303Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\huangfan\\Downloads\\SPORTZONE\\SportZone_API\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAB7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-08-02T08:13:53.726Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

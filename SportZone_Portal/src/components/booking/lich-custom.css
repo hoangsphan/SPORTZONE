@@ -1,0 +1,273 @@
+/* Custom styles for booking schedule page */
+
+/* Gradient background animations */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-bg {
+  background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Calendar grid improvements */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: 120px repeat(7, 1fr);
+  gap: 8px;
+}
+
+/* Time slot styling */
+.time-slot {
+  min-height: 100px;
+  transition: all 0.2s ease;
+  border: 2px dashed #e5e7eb;
+}
+
+.time-slot:hover {
+  border-color: #3b82f6;
+  background-color: #f8fafc;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.time-slot.has-booking {
+  border: 2px solid #e5e7eb;
+}
+
+/* Booking cell enhancements */
+.booking-cell {
+  position: relative;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.booking-cell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.booking-cell:hover::before {
+  opacity: 1;
+}
+
+/* Status indicators */
+.status-confirmed {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #16a34a;
+  color: #166534;
+}
+
+.status-pending {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #d97706;
+  color: #92400e;
+}
+
+.status-cancelled {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
+/* Modal animations */
+.modal-backdrop {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Button hover effects */
+.btn-create-slot {
+  background: linear-gradient(135deg, #10b981, #059669);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3);
+}
+
+.btn-create-slot:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(16, 185, 129, 0.4);
+}
+
+/* Today indicator */
+.today-indicator {
+  position: relative;
+}
+
+.today-indicator::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+/* Search input styling */
+.search-input {
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  background: rgba(255, 255, 255, 1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Loading spinner */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Form enhancements */
+.form-input {
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Legend styling */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.legend-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 2px solid;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .calendar-grid {
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .time-slot {
+    min-height: 80px;
+  }
+
+  .booking-cell {
+    padding: 8px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .time-slot {
+    border-color: #374151;
+    background-color: #1f2937;
+  }
+
+  .time-slot:hover {
+    border-color: #60a5fa;
+    background-color: #111827;
+  }
+
+  .search-input {
+    background: rgba(31, 41, 55, 0.9);
+    border-color: rgba(96, 165, 250, 0.2);
+    color: #f9fafb;
+  }
+}
+
+/* Accessibility improvements */
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .booking-cell {
+    break-inside: avoid;
+  }
+}
