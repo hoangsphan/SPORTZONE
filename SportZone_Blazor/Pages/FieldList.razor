@@ -1,0 +1,283 @@
+@page "/field-list"
+
+@using Microsoft.AspNetCore.WebUtilities
+@using SportZone_Blazor.Models
+@inject IFacilityService FacilityService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Field Catalog</PageTitle>
+
+<section class="page-shell field-list">
+    <header class="field-list__header">
+        <div>
+            <h1>Sport field catalog</h1>
+            <p class="subtitle">Search, filter, and book facilities in just a few clicks.</p>
+        </div>
+
+        <form class="field-list__search" @onsubmit="OnSearchSubmitted" @onsubmit:preventDefault>
+            <input @bind="_searchTerm" @bind:event="oninput" type="search" placeholder="Search by name, location, or description" />
+            <button type="submit">Search</button>
+        </form>
+    </header>
+
+    <div class="field-list__filters">
+        <label>
+            <span>Category</span>
+            <select @bind="_selectedCategory" @onchange="OnFilterChanged">
+                <option value="all">All</option>
+                @foreach (var category in _availableCategories)
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+        </label>
+
+        <div class="field-list__view-toggle" role="group" aria-label="View mode">
+            <button type="button" class="@(_isGridView ? "active" : null)" @onclick="(() => SetViewMode(true))">Grid</button>
+            <button type="button" class="@(!_isGridView ? "active" : null)" @onclick="(() => SetViewMode(false))">List</button>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="field-list__loading">
+            <div class="spinner"></div>
+            <p>Loading fields...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="field-list__error">
+            <p>@_error</p>
+            <button @onclick="Reload">Retry</button>
+        </div>
+    }
+    else if (_filteredFacilities.Count == 0)
+    {
+        <div class="field-list__empty">
+            <h2>No fields found</h2>
+            <p>Try adjusting your search term or filter selection.</p>
+        </div>
+    }
+    else
+    {
+        <div class="field-list__summary">
+            <span>@_filteredFacilities.Count results</span>
+            <span>Page @_currentPage / @_totalPages</span>
+        </div>
+
+        <div class="field-list__results @( _isGridView ? "grid" : "list")">
+            @foreach (var facility in _pagedFacilities)
+            {
+                <FieldCard Field="facility" BookClicked="OnBookClicked" />
+            }
+        </div>
+
+        @if (_totalPages > 1)
+        {
+            <nav class="field-list__pagination" aria-label="Pagination">
+                <button @onclick="(() => ChangePage(_currentPage - 1))" disabled="@(_currentPage == 1)">Prev</button>
+
+                @foreach (var page in _paginationSequence)
+                {
+                    if (page == 0)
+                    {
+                        <span class="ellipsis">...</span>
+                    }
+                    else
+                    {
+                        <button class="@(page == _currentPage ? "active" : null)" @onclick="(() => ChangePage(page))">@page</button>
+                    }
+                }
+
+                <button @onclick="(() => ChangePage(_currentPage + 1))" disabled="@(_currentPage == _totalPages)">Next</button>
+            </nav>
+        }
+    }
+</section>
+
+@code {
+    private readonly List<FacilitySummaryModel> _facilities = new();
+    private List<FacilitySummaryModel> _filteredFacilities = new();
+    private IEnumerable<FacilitySummaryModel> _pagedFacilities => _filteredFacilities.Skip((_currentPage - 1) * PageSize).Take(PageSize);
+
+    private HashSet<string> _availableCategories = new(StringComparer.OrdinalIgnoreCase);
+
+    private const int PageSize = 9;
+    private int _currentPage = 1;
+    private int _totalPages = 1;
+    private bool _isGridView = true;
+    private bool _loading = true;
+    private string? _error;
+
+    private string _searchTerm = string.Empty;
+    private string _selectedCategory = "all";
+
+    private IReadOnlyList<int> _paginationSequence => BuildPaginationSequence();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("search", out var searchValue))
+        {
+            _searchTerm = searchValue.ToString();
+        }
+
+        await LoadFacilitiesAsync();
+    }
+
+    private async Task LoadFacilitiesAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var facilities = await FacilityService.GetFacilitiesAsync(_searchTerm);
+            _facilities.Clear();
+            _facilities.AddRange(facilities);
+
+            _availableCategories = _facilities
+                .SelectMany(f => f.CategoryFields)
+                .Select(c => c.CategoryFieldName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            _error = "Failed to load fields: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var query = _facilities.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            var term = _searchTerm.Trim().ToLowerInvariant();
+            query = query.Where(f =>
+                f.Name.ToLowerInvariant().Contains(term) ||
+                (f.Address?.ToLowerInvariant().Contains(term) ?? false) ||
+                (f.Description?.ToLowerInvariant().Contains(term) ?? false) ||
+                (f.Subdescription?.ToLowerInvariant().Contains(term) ?? false) ||
+                f.CategoryFields.Any(c => c.CategoryFieldName.ToLowerInvariant().Contains(term))
+            );
+        }
+
+        if (!string.Equals(_selectedCategory, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(f => f.CategoryFields.Any(c => string.Equals(c.CategoryFieldName, _selectedCategory, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        _filteredFacilities = query.ToList();
+        _totalPages = Math.Max(1, (int)Math.Ceiling((double)_filteredFacilities.Count / PageSize));
+        _currentPage = Math.Min(_currentPage, _totalPages);
+    }
+
+    private void SetViewMode(bool grid)
+    {
+        _isGridView = grid;
+    }
+
+    private async Task OnSearchSubmitted()
+    {
+        _currentPage = 1;
+        UpdateQueryString();
+        await LoadFacilitiesAsync();
+    }
+
+    private Task OnFilterChanged(ChangeEventArgs _)
+    {
+        _currentPage = 1;
+        ApplyFilters();
+        return Task.CompletedTask;
+    }
+
+    private void ChangePage(int newPage)
+    {
+        if (newPage < 1 || newPage > _totalPages)
+        {
+            return;
+        }
+
+        _currentPage = newPage;
+    }
+
+    private void UpdateQueryString()
+    {
+        var uri = "field-list";
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "search", _searchTerm);
+        }
+
+        NavigationManager.NavigateTo(uri, replace: true);
+    }
+
+    private void SetSearchTerm(string search)
+    {
+        _searchTerm = search;
+    }
+
+    private IReadOnlyList<int> BuildPaginationSequence()
+    {
+        var results = new List<int>();
+
+        if (_totalPages <= 7)
+        {
+            for (var page = 1; page <= _totalPages; page++)
+            {
+                results.Add(page);
+            }
+            return results;
+        }
+
+        results.Add(1);
+
+        if (_currentPage > 4)
+        {
+            results.Add(0); // ellipsis
+        }
+
+        var start = Math.Max(2, _currentPage - 1);
+        var end = Math.Min(_totalPages - 1, _currentPage + 1);
+
+        for (var page = start; page <= end; page++)
+        {
+            results.Add(page);
+        }
+
+        if (_currentPage < _totalPages - 3)
+        {
+            results.Add(0);
+        }
+
+        results.Add(_totalPages);
+        return results;
+    }
+
+    private async Task Reload()
+    {
+        await LoadFacilitiesAsync();
+    }
+
+    private void OnBookClicked(FacilitySummaryModel facility)
+    {
+        if (facility is null)
+        {
+            return;
+        }
+
+        NavigationManager.NavigateTo($"/booking/{facility.FacilityId}");
+    }
+}

@@ -1,0 +1,120 @@
+@page "/"
+
+@inject IFacilityService FacilityService
+@inject NavigationManager NavigationManager
+
+<PageTitle>SportZone</PageTitle>
+
+<section class="landing-shell hero">
+    <div class="hero__content">
+        <span class="hero__eyebrow">BOOK / MANAGE / PLAY</span>
+        <h1>The modern way to run your sport facilities</h1>
+        <p>SportZone centralises bookings, payments, and staff operations in one Blazor-powered workspace.</p>
+
+        <div class="hero__actions">
+            <button class="primary" @onclick="NavigateToFields">Browse fields</button>
+            <button class="secondary" @onclick="NavigateToLogin">Sign in</button>
+        </div>
+    </div>
+
+    <div class="hero__stats">
+        <article>
+            <strong>Real-time availability</strong>
+            <p>Accurate slot management and conflict-free scheduling synced with your staff.</p>
+        </article>
+        <article>
+            <strong>Integrated payments</strong>
+            <p>Track VNPay status, refunds, and invoice history without leaving the dashboard.</p>
+        </article>
+        <article>
+            <strong>SignalR notifications</strong>
+            <p>Live updates for field owners, staff, and customers across web and mobile.</p>
+        </article>
+    </div>
+</section>
+
+<section class="landing-shell highlights">
+    <header>
+        <h2>Featured facilities</h2>
+        <p>See what is active on SportZone today.</p>
+    </header>
+
+    @if (_loading)
+    {
+        <div class="highlights__loading">
+            <div class="spinner"></div>
+            <p>Loading featured facilities...</p>
+        </div>
+    }
+    else if (_featured.Count == 0)
+    {
+        <p class="highlights__empty">No facilities published yet. Check back soon!</p>
+    }
+    else
+    {
+        <div class="highlights__grid">
+            @foreach (var facility in _featured)
+            {
+                <article class="highlight-card">
+                    <img src="@(facility.ImageUrls.FirstOrDefault() ?? "https://placehold.co/480x320?text=SportZone")" alt="@facility.Name" loading="lazy" />
+                    <div class="highlight-card__body">
+                        <h3>@facility.Name</h3>
+                        <p>@facility.Address</p>
+                        <button @onclick="(() => NavigateToFacility(facility.FacilityId))">View details</button>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+<section class="landing-shell pillars">
+    <h2>Why teams love SportZone</h2>
+    <div class="pillars__grid">
+        <article>
+            <h3>Operations in sync</h3>
+            <p>Coordinate facilities, fields, staff, and services with a single source of truth.</p>
+        </article>
+        <article>
+            <h3>Actionable insights</h3>
+            <p>Finance dashboards highlight owner revenue, booking trends, and utilisation rates.</p>
+        </article>
+        <article>
+            <h3>Extensible platform</h3>
+            <p>Leverage a modular Blazor component stack ready for custom flows and branding.</p>
+        </article>
+    </div>
+</section>
+
+@code {
+    private readonly List<FacilitySummaryModel> _featured = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var facilities = await FacilityService.GetFacilitiesAsync();
+            _featured.AddRange(facilities.Take(3));
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void NavigateToFields()
+    {
+        NavigationManager.NavigateTo("/field-list");
+    }
+
+    private void NavigateToLogin()
+    {
+        NavigationManager.NavigateTo("/login");
+    }
+
+    private void NavigateToFacility(int facilityId)
+    {
+        NavigationManager.NavigateTo($"/facility/{facilityId}");
+    }
+}

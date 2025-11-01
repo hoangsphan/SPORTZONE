@@ -1,0 +1,161 @@
+@page "/finance-manager"
+
+@inject IOrderService OrderService
+
+<PageTitle>Finance Manager</PageTitle>
+
+<section class="page-shell finance-manager">
+    <header>
+        <h1>Owner revenue insights</h1>
+        <p>Monitor gross turnover filtered by date range and facility.</p>
+    </header>
+
+    <form class="finance-form" @onsubmit="FetchRevenue" @onsubmit:preventDefault>
+        <label>
+            <span>Owner ID</span>
+            <input type="number" min="1" @bind="_ownerId" required />
+        </label>
+        <label>
+            <span>Facility ID (optional)</span>
+            <input type="number" min="1" @bind="_facilityId" />
+        </label>
+        <label>
+            <span>Start date</span>
+            <input type="date" @bind="_startDate" />
+        </label>
+        <label>
+            <span>End date</span>
+            <input type="date" @bind="_endDate" />
+        </label>
+        <button type="submit" disabled="_loading">@(_loading ? "Loading..." : "Update")</button>
+    </form>
+
+    @if (_error is not null)
+    {
+        <div class="finance-error">@_error</div>
+    }
+
+    @if (_revenue is not null)
+    {
+        <section class="finance-summary">
+            <article>
+                <h2>Total revenue</h2>
+                <p>@_revenue.TotalRevenue.ToString("N0") VND</p>
+            </article>
+            <article>
+                <h2>Reporting window</h2>
+                <p>@FormatDate(_revenue.StartDate) -> @FormatDate(_revenue.EndDate)</p>
+            </article>
+        </section>
+
+        @if (_revenue.MonthlyRevenue is not null && _revenue.MonthlyRevenue.Count > 0)
+        {
+            <section class="finance-table">
+                <h3>Monthly revenue</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var kvp in _revenue.MonthlyRevenue.OrderBy(k => k.Key))
+                        {
+                            <tr>
+                                <td>@kvp.Key</td>
+                                <td>@kvp.Value.ToString("N0") VND</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+        }
+
+        @if (_revenue.Facilities is not null && _revenue.Facilities.Count > 0)
+        {
+            <section class="finance-table">
+                <h3>Facilities</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var facility in _revenue.Facilities.OrderByDescending(f => f.TotalRevenue))
+                        {
+                            <tr>
+                                <td>@facility.FacilityName (@facility.FacilityId)</td>
+                                <td>@facility.TotalRevenue.ToString("N0") VND</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+        }
+    }
+</section>
+
+@code {
+    private int _ownerId;
+    private int? _facilityId;
+    private string? _startDate;
+    private string? _endDate;
+
+    private OwnerRevenueModel? _revenue;
+    private bool _loading;
+    private string? _error;
+
+    private async Task FetchRevenue()
+    {
+        if (_ownerId <= 0)
+        {
+            _error = "Owner id is required.";
+            return;
+        }
+
+        _loading = true;
+        _error = null;
+        _revenue = null;
+
+        try
+        {
+            DateTime? start = ParseDate(_startDate);
+            DateTime? end = ParseDate(_endDate);
+
+            var result = await OrderService.GetOwnerRevenueAsync(_ownerId, start, end, _facilityId);
+            if (result is null)
+            {
+                _error = "No revenue data found.";
+            }
+            else
+            {
+                _revenue = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load revenue: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static DateTime? ParseDate(string? value)
+    {
+        if (DateTime.TryParse(value, out var date))
+        {
+            return date;
+        }
+        return null;
+    }
+
+    private static string FormatDate(DateTime? value)
+    {
+        return value?.ToString("dd/MM/yyyy") ?? "--";
+    }
+}
