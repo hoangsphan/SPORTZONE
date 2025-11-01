@@ -1,0 +1,125 @@
+@page "/order-manager"
+
+@inject IOrderService OrderService
+
+<PageTitle>Order Manager</PageTitle>
+
+<section class="page-shell order-manager">
+    <header>
+        <h1>Order look-up</h1>
+        <p>Inspect booking invoices, payment status, and attached services.</p>
+    </header>
+
+    <form class="order-manager__search" @onsubmit="FetchOrder" @onsubmit:preventDefault>
+        <label>
+            <span>Order ID</span>
+            <input type="number" min="1" @bind="_orderId" required />
+        </label>
+        <button type="submit" disabled="_loading">@(_loading ? "Loading..." : "Load order")</button>
+    </form>
+
+    @if (_error is not null)
+    {
+        <div class="order-manager__error">@_error</div>
+    }
+
+    @if (_order is not null)
+    {
+        <article class="order-card">
+            <header>
+                <h2>Order #@_order.OrderId</h2>
+                <span class="status">@(_order.StatusPayment ?? "Unknown")</span>
+            </header>
+
+            <dl>
+                <div>
+                    <dt>Total price</dt>
+                    <dd>@(_order.TotalPrice?.ToString("N0") ?? "-") VND</dd>
+                </div>
+                <div>
+                    <dt>Customer</dt>
+                    <dd>@(_order.GuestName ?? "Walk-in") - @_order.GuestPhone</dd>
+                </div>
+                <div>
+                    <dt>Created</dt>
+                    <dd>@_order.CreatedAt?.ToLocalTime().ToString("g")</dd>
+                </div>
+                <div>
+                    <dt>Payment note</dt>
+                    <dd>@(_order.ContentPayment ?? "N/A")</dd>
+                </div>
+            </dl>
+
+            <section class="order-card__services">
+                <h3>Services</h3>
+                @if (_order.Services.Count == 0)
+                {
+                    <p>No add-on services attached.</p>
+                }
+                else
+                {
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var service in _order.Services)
+                            {
+                                <tr>
+                                    <td>@service.ServiceName</td>
+                                    <td>@service.Quantity</td>
+                                    <td>@(service.Price?.ToString("N0") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </section>
+        </article>
+    }
+</section>
+
+@code {
+    private int _orderId;
+    private OrderModel? _order;
+    private bool _loading;
+    private string? _error;
+
+    private async Task FetchOrder()
+    {
+        if (_orderId <= 0)
+        {
+            _error = "Enter a valid order id.";
+            return;
+        }
+
+        _loading = true;
+        _error = null;
+        _order = null;
+
+        try
+        {
+            var order = await OrderService.GetOrderAsync(_orderId);
+            if (order is null)
+            {
+                _error = "Order not found.";
+            }
+            else
+            {
+                _order = order;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load order: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

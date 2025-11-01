@@ -1,0 +1,46 @@
+@using SportZone_Blazor.Models
+
+<article class="field-card">
+    <div class="field-card__image">
+        <img src="@PrimaryImage" alt="@Field.Name" loading="lazy" />
+    </div>
+    <div class="field-card__content">
+        <header class="field-card__header">
+            <h2>@Field.Name</h2>
+            <span class="field-card__tag">@AvailabilityLabel</span>
+        </header>
+        <p class="field-card__location">@Field.Address</p>
+        <p class="field-card__description">@Field.Description</p>
+
+        @if (Field.CategoryFields.Count > 0)
+        {
+            <ul class="field-card__chips">
+                @foreach (var category in Field.CategoryFields)
+                {
+                    <li>@category.CategoryFieldName</li>
+                }
+            </ul>
+        }
+
+        <footer class="field-card__footer">
+            <button class="field-card__cta" @onclick="OnBook">Book now</button>
+        </footer>
+    </div>
+</article>
+
+@code {
+    [Parameter]
+    public FacilitySummaryModel Field { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<FacilitySummaryModel> BookClicked { get; set; }
+
+    private string PrimaryImage => Field.ImageUrls.FirstOrDefault() ?? "https://placehold.co/600x400?text=SportZone";
+
+    private string AvailabilityLabel => "Available";
+
+    private async Task OnBook()
+    {
+        await BookClicked.InvokeAsync(Field);
+    }
+}

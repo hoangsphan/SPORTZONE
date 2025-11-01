@@ -1,0 +1,329 @@
+@page "/booking/{FacilityId:int}"
+
+@inject IFacilityService FacilityService
+@inject IFieldService FieldService
+@inject IBookingService BookingService
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>Book a field</PageTitle>
+
+<section class="page-shell booking">
+    @if (_loading)
+    {
+        <div class="booking__state">
+            <div class="spinner"></div>
+            <p>Preparing booking data...</p>
+        </div>
+    }
+    else if (_facility is null)
+    {
+        <div class="booking__state error">
+            <h1>Facility not found</h1>
+            <p>The requested facility is unavailable. Please pick another location.</p>
+        </div>
+    }
+    else
+    {
+        <div class="booking__layout">
+            <aside class="booking__facility">
+                <h1>@_facility.Name</h1>
+                <p class="booking__address">@_facility.Address</p>
+                <dl>
+                    <div>
+                        <dt>Opening hours</dt>
+                        <dd>@FormatTime(_facility.OpenTime) - @FormatTime(_facility.CloseTime)</dd>
+                    </div>
+                    <div>
+                        <dt>Description</dt>
+                        <dd>@_facility.Description</dd>
+                    </div>
+                    <div>
+                        <dt>Categories</dt>
+                        <dd>
+                            @if (_facility.CategoryFields.Count == 0)
+                            {
+                                <span>No categories tagged.</span>
+                            }
+                            else
+                            {
+                                <ul class="booking__tags">
+                                    @foreach (var category in _facility.CategoryFields)
+                                    {
+                                        <li>@category.CategoryFieldName</li>
+                                    }
+                                </ul>
+                            }
+                        </dd>
+                    </div>
+                </dl>
+            </aside>
+
+            <div class="booking__content">
+                <div class="booking__controls">
+                    <label>
+                        <span>Field</span>
+                        <select @bind="_selectedFieldId" @onchange="OnFieldChanged">
+                            @foreach (var field in _fields)
+                            {
+                                <option value="@field.FieldId">@field.FieldName ?? $"Field {field.FieldId}"</option>
+                            }
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Date</span>
+                        <input type="date" value="@_selectedDate.ToString("yyyy-MM-dd")" @onchange="OnDateChanged" />
+                    </label>
+
+                    <div class="booking__summary">
+                        <span>Selected slots: @_selectedSlotIds.Count</span>
+                        <span>Total price: @(_selectedSlots.Sum(s => s.Price ?? 0m).ToString("N0")) VND</span>
+                    </div>
+                </div>
+
+                @if (_scheduleLoading)
+                {
+                    <div class="booking__state">
+                        <div class="spinner"></div>
+                        <p>Loading available slots...</p>
+                    </div>
+                }
+                else if (_availableSlots.Count == 0)
+                {
+                    <div class="booking__state">
+                        <h2>No free slots</h2>
+                        <p>Pick another day or field to continue.</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="booking__slots">
+                        <thead>
+                            <tr>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var slot in _availableSlots)
+                            {
+                                var isSelected = _selectedSlotIds.Contains(slot.ScheduleId);
+                                <tr class="@(isSelected ? "selected" : null)">
+                                    <td>@slot.StartTime?.ToString("HH:mm")</td>
+                                    <td>@slot.EndTime?.ToString("HH:mm")</td>
+                                    <td>@(slot.Price?.ToString("N0") ?? "-")</td>
+                                    <td>@(slot.Status ?? "Available")</td>
+                                    <td>
+                                        <input type="checkbox" checked="@isSelected" @onchange="(_ => ToggleSlot(slot))" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                <EditForm Model="_form" OnValidSubmit="SubmitBooking">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="booking__form">
+                        <label>
+                            <span>Contact name</span>
+                            <InputText @bind-Value="_form.GuestName" required />
+                        </label>
+
+                        <label>
+                            <span>Phone number</span>
+                            <InputText @bind-Value="_form.GuestPhone" required />
+                        </label>
+
+                        <label class="wide">
+                            <span>Notes</span>
+                            <InputTextArea @bind-Value="_form.Notes" rows="3" />
+                        </label>
+                    </div>
+
+                    <div class="booking__actions">
+                        <button type="submit" disabled="_booking || !_selectedSlotIds.Any()">
+                            @_booking ? "Processing..." : "Confirm booking"
+                        </button>
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(_alert))
+                {
+                    <div class="booking__alert">@_alert</div>
+                }
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public int FacilityId { get; set; }
+
+    private FacilityDetailModel? _facility;
+    private readonly List<FieldSummaryModel> _fields = new();
+    private readonly List<FieldScheduleModel> _selectedSlots = new();
+    private readonly HashSet<int> _selectedSlotIds = new();
+    private readonly List<FieldScheduleModel> _availableSlots = new();
+
+    private bool _loading = true;
+    private bool _scheduleLoading;
+    private string? _alert;
+    private bool _booking;
+
+    private int? _selectedFieldId;
+    private DateOnly _selectedDate = DateOnly.FromDateTime(DateTime.Today);
+
+    private readonly BookingFormState _form = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadFacilityAsync();
+    }
+
+    private async Task LoadFacilityAsync()
+    {
+        _loading = true;
+        _fields.Clear();
+        _facility = await FacilityService.GetFacilityAsync(FacilityId);
+
+        if (_facility is not null)
+        {
+            var fields = await FieldService.GetFieldsForFacilityAsync(FacilityId);
+            _fields.AddRange(fields);
+            _selectedFieldId = _fields.FirstOrDefault()?.FieldId;
+            await LoadScheduleAsync();
+        }
+
+        _loading = false;
+    }
+
+    private async Task LoadScheduleAsync()
+    {
+        _scheduleLoading = true;
+        _availableSlots.Clear();
+        _selectedSlots.Clear();
+        _selectedSlotIds.Clear();
+
+        if (_selectedFieldId is int fieldId)
+        {
+            var schedule = await FieldService.GetScheduleForFieldAsync(fieldId);
+            foreach (var slot in schedule)
+            {
+                if (slot.Status?.Equals("Available", StringComparison.OrdinalIgnoreCase) == true && slot.Date == _selectedDate)
+                {
+                    _availableSlots.Add(slot);
+                }
+            }
+
+            _availableSlots.Sort((a, b) => a.StartTime.GetValueOrDefault().CompareTo(b.StartTime.GetValueOrDefault()));
+        }
+
+        _scheduleLoading = false;
+    }
+
+    private Task OnFieldChanged(ChangeEventArgs _)
+    {
+        _ = LoadScheduleAsync();
+        return Task.CompletedTask;
+    }
+
+    private Task OnDateChanged(ChangeEventArgs args)
+    {
+        if (DateOnly.TryParse(args.Value?.ToString(), out var date))
+        {
+            _selectedDate = date;
+            _ = LoadScheduleAsync();
+        }
+        return Task.CompletedTask;
+    }
+
+    private void ToggleSlot(FieldScheduleModel slot)
+    {
+        if (_selectedSlotIds.Contains(slot.ScheduleId))
+        {
+            _selectedSlotIds.Remove(slot.ScheduleId);
+            _selectedSlots.RemoveAll(s => s.ScheduleId == slot.ScheduleId);
+        }
+        else
+        {
+            _selectedSlotIds.Add(slot.ScheduleId);
+            _selectedSlots.Add(slot);
+        }
+    }
+
+    private async Task SubmitBooking()
+    {
+        if (_selectedFieldId is null || !_selectedSlotIds.Any())
+        {
+            _alert = "Select at least one available slot.";
+            return;
+        }
+
+        _booking = true;
+        _alert = null;
+
+        try
+        {
+            var request = new BookingRequestModel
+            {
+                FieldId = _selectedFieldId,
+                FacilityId = FacilityId,
+                GuestName = _form.GuestName,
+                GuestPhone = _form.GuestPhone,
+                Notes = _form.Notes,
+                SelectedSlotIds = _selectedSlotIds.ToList()
+            };
+
+            await BookingService.CreateBookingAsync(request);
+
+            _alert = "Booking created successfully!";
+            await LoadScheduleAsync();
+            _form.Reset();
+        }
+        catch (Exception ex)
+        {
+            _alert = $"Booking failed: {ex.Message}";
+        }
+        finally
+        {
+            _booking = false;
+        }
+    }
+
+    private static string FormatTime(string? time)
+    {
+        if (string.IsNullOrWhiteSpace(time))
+        {
+            return "--";
+        }
+
+        return time.Length >= 5 ? time[..5] : time;
+    }
+
+    private sealed class BookingFormState
+    {
+        [Required]
+        [StringLength(100)]
+        public string GuestName { get; set; } = string.Empty;
+
+        [Required]
+        [RegularExpression(@"^0[0-9]{9}$", ErrorMessage = "Phone number must contain 10 digits and start with 0.")]
+        public string GuestPhone { get; set; } = string.Empty;
+
+        public string? Notes { get; set; }
+
+        public void Reset()
+        {
+            GuestName = string.Empty;
+            GuestPhone = string.Empty;
+            Notes = string.Empty;
+        }
+    }
+}
