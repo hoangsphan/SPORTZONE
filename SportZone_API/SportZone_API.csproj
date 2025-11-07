@@ -25,6 +25,7 @@
     <Folder Include="Models\" />
     <Folder Include="wwwroot\FacilityImages\" />
     <Folder Include="wwwroot\ServiceImages\" />
+    <Folder Include="wwwroot\StaffImages\" />
   </ItemGroup>
 
 </Project>

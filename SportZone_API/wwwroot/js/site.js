@@ -76,7 +76,7 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function initShareButtons() {
         const shareButtons = document.querySelectorAll('[data-share-url].share-trigger');
         shareButtons.forEach((button) => {
             button.addEventListener('click', (event) => {
@@ -84,5 +84,39 @@
                 shareLink(button);
             });
         });
+    }
+
+    function initRoleSections() {
+        const roleSelect = document.querySelector('[data-role-toggle]');
+        if (!roleSelect) {
+            return;
+        }
+
+        const sections = document.querySelectorAll('[data-role-section]');
+
+        const getTargetRoles = (element) => {
+            const value = element.dataset.roleSection || '';
+            return value
+                .split(',')
+                .map((item) => item.trim().toLowerCase())
+                .filter(Boolean);
+        };
+
+        const updateVisibility = () => {
+            const selectedRole = (roleSelect.value || '').trim().toLowerCase();
+            sections.forEach((section) => {
+                const roles = getTargetRoles(section);
+                const shouldShow = roles.length === 0 || roles.includes(selectedRole);
+                section.classList.toggle('is-visible', shouldShow);
+            });
+        };
+
+        roleSelect.addEventListener('change', updateVisibility);
+        updateVisibility();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initShareButtons();
+        initRoleSections();
     });
 })();
