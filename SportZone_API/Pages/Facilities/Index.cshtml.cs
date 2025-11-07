@@ -62,7 +62,7 @@ namespace SportZone_API.Pages.Facilities
         [BindProperty(SupportsGet = true, Name = "pageSize")]
         public int? PageSize { get; set; }
 
-        public IReadOnlyList<string> AppliedFilters { get; private set; } = Array.Empty<string>();
+        public IReadOnlyList<AppliedFilter> AppliedFilters { get; private set; } = Array.Empty<AppliedFilter>();
 
         public string? ErrorMessage { get; private set; }
 
@@ -139,7 +139,7 @@ namespace SportZone_API.Pages.Facilities
                     ErrorMessage = facilitiesResponse?.Message ?? "Không thể tải danh sách cơ sở.";
                     _logger.LogError("Lỗi tải cơ sở: {Message}", facilitiesResponse?.Message);
                     Facilities = Array.Empty<FacilityDetailDto>();
-                    AppliedFilters = Array.Empty<string>();
+                    AppliedFilters = Array.Empty<AppliedFilter>();
                     ResultCount = 0;
                     TotalPages = 1;
                     CurrentPage = 1;
@@ -207,30 +207,50 @@ namespace SportZone_API.Pages.Facilities
 
                 PaginationPages = BuildPaginationWindow(CurrentPage, TotalPages);
 
-                var appliedFilters = new List<string>();
+                var appliedFilters = new List<AppliedFilter>();
                 if (HasSearch)
                 {
-                    appliedFilters.Add($"từ khóa \"{Search}\"");
+                    appliedFilters.Add(new AppliedFilter(
+                        $"Từ khóa: \"{Search}\"",
+                        $"từ khóa \"{Search}\"",
+                        $"Bỏ từ khóa \"{Search}\"",
+                        BuildClearRouteValues(route => route.Remove("Search"))));
                 }
 
                 if (HasCategoryFilter)
                 {
-                    appliedFilters.Add($"hạng mục \"{Category}\"");
+                    appliedFilters.Add(new AppliedFilter(
+                        $"Hạng mục: \"{Category}\"",
+                        $"hạng mục \"{Category}\"",
+                        $"Bỏ hạng mục \"{Category}\"",
+                        BuildClearRouteValues(route => route.Remove("Category"))));
                 }
 
                 if (HasAddressFilter)
                 {
-                    appliedFilters.Add($"khu vực \"{Address}\"");
+                    appliedFilters.Add(new AppliedFilter(
+                        $"Khu vực: \"{Address}\"",
+                        $"khu vực \"{Address}\"",
+                        $"Bỏ khu vực \"{Address}\"",
+                        BuildClearRouteValues(route => route.Remove("Address"))));
                 }
 
                 if (HasOpenNowFilter)
                 {
-                    appliedFilters.Add("cơ sở đang mở cửa");
+                    appliedFilters.Add(new AppliedFilter(
+                        "Chỉ hiển thị cơ sở đang mở",
+                        "cơ sở đang mở cửa",
+                        "Bỏ bộ lọc cơ sở đang mở cửa",
+                        BuildClearRouteValues(route => route.Remove("OpenNow"))));
                 }
 
                 if (HasSort)
                 {
-                    appliedFilters.Add($"sắp xếp theo {ActiveSortOption.FilterDescription}");
+                    appliedFilters.Add(new AppliedFilter(
+                        $"Sắp xếp: {ActiveSortOption.Label}",
+                        $"sắp xếp theo {ActiveSortOption.FilterDescription}",
+                        "Bỏ sắp xếp tùy chỉnh",
+                        BuildClearRouteValues(route => route.Remove("SortBy"))));
                 }
 
                 AppliedFilters = appliedFilters;
@@ -376,10 +396,14 @@ namespace SportZone_API.Pages.Facilities
 
         public IDictionary<string, object?> BuildRouteValues(int pageNumber)
         {
-            var routeValues = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["page"] = pageNumber
-            };
+            var routeValues = BuildFilterRouteValues();
+            routeValues["page"] = pageNumber;
+            return routeValues;
+        }
+
+        private IDictionary<string, object?> BuildFilterRouteValues()
+        {
+            var routeValues = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
             if (HasSearch)
             {
@@ -411,6 +435,14 @@ namespace SportZone_API.Pages.Facilities
                 routeValues["pageSize"] = CurrentPageSize;
             }
 
+            return routeValues;
+        }
+
+        private IDictionary<string, object?> BuildClearRouteValues(Action<IDictionary<string, object?>> adjust)
+        {
+            var routeValues = BuildFilterRouteValues();
+            adjust(routeValues);
+            routeValues["page"] = 1;
             return routeValues;
         }
 
@@ -491,5 +523,7 @@ namespace SportZone_API.Pages.Facilities
         }
 
         public record SortOption(string Value, string Label, string FilterDescription);
+
+        public record AppliedFilter(string Label, string Summary, string RemoveLabel, IDictionary<string, object?> ClearRouteValues);
     }
 }

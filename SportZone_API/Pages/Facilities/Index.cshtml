@@ -85,7 +85,7 @@ else if (Model.ResultCount == 0)
 else
 {
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
-        @{ var filterDescriptions = Model.AppliedFilters; }
+        @{ var filterDescriptions = Model.AppliedFilters.Select(filter => filter.Summary).ToList(); }
         <p class="mb-0 text-muted">
             Đang hiển thị
             @if (Model.ResultCount > 0)
@@ -120,7 +120,10 @@ else
         <div class="d-flex flex-wrap gap-2 mb-3">
             @foreach (var filter in Model.AppliedFilters)
             {
-                <span class="badge badge-soft-primary">@filter</span>
+                <a class="badge badge-soft-primary filter-badge" asp-page="./Index" asp-all-route-data="filter.ClearRouteValues" aria-label="@filter.RemoveLabel">
+                    <span>@filter.Label</span>
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </a>
             }
         </div>
     }
