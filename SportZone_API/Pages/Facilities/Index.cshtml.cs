@@ -30,6 +30,9 @@ namespace SportZone_API.Pages.Facilities
         [BindProperty(SupportsGet = true)]
         public string? Address { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public bool? OpenNow { get; set; }
+
         public IReadOnlyList<string> AppliedFilters { get; private set; } = Array.Empty<string>();
 
         public string? ErrorMessage { get; private set; }
@@ -40,7 +43,13 @@ namespace SportZone_API.Pages.Facilities
 
         public bool HasAddressFilter => !string.IsNullOrWhiteSpace(Address);
 
+        public bool HasOpenNowFilter => OpenNow is true;
+
         public int ResultCount => Facilities.Count;
+
+        public DateTime EvaluationTimestamp { get; private set; }
+
+        public string CurrentTimeDisplay => EvaluationTimestamp.ToString("HH:mm");
 
         public IndexModel(
             IFacilityService facilityService,
@@ -54,6 +63,7 @@ namespace SportZone_API.Pages.Facilities
 
         public async Task OnGetAsync()
         {
+            EvaluationTimestamp = DateTime.Now;
             try
             {
                 Search = NormalizeQuery(Search);
@@ -95,6 +105,15 @@ namespace SportZone_API.Pages.Facilities
                         .ToList();
                 }
 
+                if (HasOpenNowFilter)
+                {
+                    var evaluationTime = EvaluationTimestamp;
+                    facilities = facilities
+                        .Where(facility => FacilityScheduleHelper
+                            .Evaluate(facility.OpenTime, facility.CloseTime, evaluationTime).IsOpen)
+                        .ToList();
+                }
+
                 Facilities = facilities;
 
                 var appliedFilters = new List<string>();
@@ -111,6 +130,11 @@ namespace SportZone_API.Pages.Facilities
                 if (HasAddressFilter)
                 {
                     appliedFilters.Add($"khu vực \"{Address}\"");
+                }
+
+                if (HasOpenNowFilter)
+                {
+                    appliedFilters.Add("cơ sở đang mở cửa");
                 }
 
                 AppliedFilters = appliedFilters;
@@ -201,6 +225,11 @@ namespace SportZone_API.Pages.Facilities
         private static string? NormalizeQuery(string? value)
         {
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        public FacilityScheduleStatus GetScheduleStatus(FacilityDetailDto facility)
+        {
+            return FacilityScheduleHelper.Evaluate(facility.OpenTime, facility.CloseTime, EvaluationTimestamp);
         }
     }
 }

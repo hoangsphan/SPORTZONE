@@ -47,6 +47,10 @@ namespace SportZone_API.Pages.Facilities
 
         public bool HasFacility => Facility is not null;
 
+        public DateTime EvaluationTimestamp { get; private set; }
+
+        public string CurrentTimeDisplay => EvaluationTimestamp.ToString("HH:mm");
+
         public async Task<IActionResult> OnGetAsync(int id)
         {
             if (id <= 0)
@@ -56,6 +60,7 @@ namespace SportZone_API.Pages.Facilities
                 return Page();
             }
 
+            EvaluationTimestamp = DateTime.Now;
             try
             {
                 var facilityResponse = await _facilityService.GetFacilityDetailsAsync(id);
@@ -157,6 +162,11 @@ namespace SportZone_API.Pages.Facilities
             return value.HasValue
                 ? string.Format(VietnameseCulture, "{0:C0}", value.Value)
                 : "--";
+        }
+
+        public FacilityScheduleStatus GetFacilityScheduleStatus()
+        {
+            return FacilityScheduleHelper.Evaluate(Facility?.OpenTime, Facility?.CloseTime, EvaluationTimestamp);
         }
     }
 }

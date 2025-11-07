@@ -1,10 +1,32 @@
 @page "{id:int}"
 @model SportZone_API.Pages.Facilities.DetailsModel
-@{
+@{ 
     var title = Model.Facility?.Name ?? "Chi tiết cơ sở";
     ViewData["Title"] = title;
     var imageUrl = Model.Facility?.ImageUrls?.FirstOrDefault(url => !string.IsNullOrWhiteSpace(url))
         ?? Url.Content("~/images/placeholder-facility.svg");
+    var schedule = Model.GetFacilityScheduleStatus();
+    var statusClass = schedule.IsOpen
+        ? "badge-soft-success"
+        : schedule.HasSchedule ? "badge-soft-danger" : "badge-soft-secondary";
+    var statusIcon = schedule.IsOpen
+        ? "fa-door-open"
+        : schedule.HasSchedule ? "fa-door-closed" : "fa-clock";
+    var statusLabel = schedule.Is24Hours
+        ? "Hoạt động 24/7"
+        : schedule.IsOpen ? "Đang mở" : schedule.HasSchedule ? "Đang đóng" : "Đang cập nhật";
+    var nextChange = schedule.NextChangeTime;
+    var statusMeta = schedule.HasSchedule
+        ? schedule.Is24Hours
+            ? "Phục vụ suốt tuần"
+            : schedule.IsOpen
+                ? nextChange.HasValue
+                    ? $"Đóng lúc {nextChange.Value:HH\\:mm}" + (schedule.NextChangeIsTomorrow ? " (ngày mai)" : string.Empty)
+                    : "Thời gian đóng cửa đang cập nhật"
+                : nextChange.HasValue
+                    ? $"Mở lại {(schedule.NextChangeIsTomorrow ? "ngày mai " : string.Empty)}lúc {nextChange.Value:HH\\:mm}"
+                    : "Thời gian mở cửa đang cập nhật"
+        : "Giờ mở cửa sẽ được cập nhật sớm";
 }
 
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -46,6 +68,11 @@ else
                 <span><i class="fa-regular fa-clock me-2 text-primary"></i>@(Model.Facility.OpenTime?.ToString("HH\\:mm") ?? "--:--") - @(Model.Facility.CloseTime?.ToString("HH\\:mm") ?? "--:--")</span>
                 <span><i class="fa-solid fa-layer-group me-2 text-success"></i>@(Model.Facility.CategoryFields?.Count ?? 0) hạng mục</span>
             </div>
+            <div class="d-flex flex-column flex-sm-row flex-wrap gap-2 mt-3 align-items-sm-center">
+                <span class="badge @statusClass"><i class="fa-solid @statusIcon me-1"></i>@statusLabel</span>
+                <span class="text-muted small">Cập nhật lúc @Model.CurrentTimeDisplay</span>
+            </div>
+            <p class="text-muted small mb-0 mt-2">@statusMeta</p>
             @if (Model.Facility.CategoryFields?.Any(category => !string.IsNullOrWhiteSpace(category?.CategoryFieldName)) == true)
             {
                 <div class="d-flex flex-wrap gap-2 mt-3">

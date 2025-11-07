@@ -1,5 +1,28 @@
 @model SportZone_API.DTOs.FacilityDetailDto
-@{
+@{ 
+    var evaluationTime = ViewData["ScheduleEvaluationTime"] as DateTime? ?? DateTime.Now;
+    var schedule = FacilityScheduleHelper.Evaluate(Model.OpenTime, Model.CloseTime, evaluationTime);
+    var statusClass = schedule.IsOpen
+        ? "badge-soft-success"
+        : schedule.HasSchedule ? "badge-soft-danger" : "badge-soft-secondary";
+    var statusIcon = schedule.IsOpen
+        ? "fa-door-open"
+        : schedule.HasSchedule ? "fa-door-closed" : "fa-clock";
+    var statusLabel = schedule.Is24Hours
+        ? "Hoạt động 24/7"
+        : schedule.IsOpen ? "Đang mở" : schedule.HasSchedule ? "Đang đóng" : "Đang cập nhật";
+    var nextChange = schedule.NextChangeTime;
+    var statusMeta = schedule.HasSchedule
+        ? schedule.Is24Hours
+            ? "Phục vụ suốt tuần"
+            : schedule.IsOpen
+                ? nextChange.HasValue
+                    ? $"Đóng lúc {nextChange.Value:HH\\:mm}" + (schedule.NextChangeIsTomorrow ? " (ngày mai)" : string.Empty)
+                    : "Thời gian đóng cửa đang cập nhật"
+                : nextChange.HasValue
+                    ? $"Mở lại {(schedule.NextChangeIsTomorrow ? "ngày mai " : string.Empty)}lúc {nextChange.Value:HH\\:mm}"
+                    : "Thời gian mở cửa đang cập nhật"
+        : "Giờ mở cửa sẽ được cập nhật sớm";
     var imageUrl = Model.ImageUrls?.FirstOrDefault(url => !string.IsNullOrWhiteSpace(url))
         ?? Url.Content("~/images/placeholder-facility.svg");
     var openTime = Model.OpenTime?.ToString("HH\\:mm") ?? "--:--";
@@ -25,9 +48,12 @@
         </header>
 
         <div class="facility-card__badges d-flex flex-wrap">
+            <span class="badge @statusClass"><i class="fa-solid @statusIcon me-1"></i>@statusLabel</span>
             <span class="badge badge-soft-primary"><i class="fa-regular fa-clock me-1"></i>@openTime - @closeTime</span>
             <span class="badge badge-soft-success">@categories.Count hạng mục</span>
         </div>
+
+        <p class="facility-card__status-meta text-muted small mb-0">@statusMeta</p>
 
         @if (hasDescription)
         {
