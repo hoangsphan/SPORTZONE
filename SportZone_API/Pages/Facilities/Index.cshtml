@@ -14,14 +14,34 @@
 
 <section class="search-panel mb-4">
     <form method="get" class="row g-3 align-items-end">
-        <div class="col-12 col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-lg-4">
             <label class="form-label" asp-for="Search">Từ khóa</label>
             <input class="form-control" asp-for="Search" placeholder="Nhập tên cơ sở hoặc địa chỉ..." />
         </div>
-        <div class="col-12 col-md-3 col-xl-2">
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label" asp-for="Category">Hạng mục</label>
+            <select class="form-select" asp-for="Category">
+                <option value="">Tất cả hạng mục</option>
+                @foreach (var category in Model.CategoryOptions)
+                {
+                    <option value="@category.CategoryFieldName">@category.CategoryFieldName</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label" asp-for="Address">Khu vực</label>
+            <select class="form-select" asp-for="Address">
+                <option value="">Tất cả khu vực</option>
+                @foreach (var address in Model.AddressOptions)
+                {
+                    <option value="@address">@address</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-3 col-lg-1">
             <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-search me-2"></i>Tìm kiếm</button>
         </div>
-        <div class="col-12 col-md-3 col-xl-2">
+        <div class="col-12 col-md-3 col-lg-1">
             <a class="btn btn-outline-secondary w-100" asp-page="/Facilities/Index"><i class="fa-solid fa-rotate me-2"></i>Đặt lại</a>
         </div>
     </form>
@@ -41,10 +61,12 @@ else if (!Model.Facilities.Any())
 else
 {
     <div class="d-flex justify-content-between align-items-center mb-3">
+        @{ var filterDescriptions = Model.AppliedFilters; }
         <p class="mb-0 text-muted">
-            Đang hiển thị <strong>@Model.ResultCount</strong> cơ sở @if (Model.HasSearch)
+            Đang hiển thị <strong>@Model.ResultCount</strong> cơ sở
+            @if (filterDescriptions.Count > 0)
             {
-                <text>phù hợp với từ khóa "@Model.Search"</text>
+                <text>phù hợp với @string.Join(", ", filterDescriptions)</text>
             }
             else
             {
@@ -52,6 +74,16 @@ else
             }
         </p>
     </div>
+
+    @if (Model.AppliedFilters.Count > 0)
+    {
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            @foreach (var filter in Model.AppliedFilters)
+            {
+                <span class="badge badge-soft-primary">@filter</span>
+            }
+        </div>
+    }
 
     <div class="row g-4">
         @foreach (var facility in Model.Facilities)
