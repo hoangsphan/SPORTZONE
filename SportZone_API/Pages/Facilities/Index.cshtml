@@ -40,40 +40,24 @@ else if (!Model.Facilities.Any())
 }
 else
 {
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="mb-0 text-muted">
+            Đang hiển thị <strong>@Model.ResultCount</strong> cơ sở @if (Model.HasSearch)
+            {
+                <text>phù hợp với từ khóa "@Model.Search"</text>
+            }
+            else
+            {
+                <text>mới nhất trên hệ thống</text>
+            }
+        </p>
+    </div>
+
     <div class="row g-4">
         @foreach (var facility in Model.Facilities)
         {
             <div class="col-12 col-md-6 col-xl-4">
-                <article class="facility-card h-100">
-                    <img src="@facility.ImageUrls.FirstOrDefault() ?? "https://placehold.co/600x400?text=SportZone"" alt="@facility.Name" />
-                    <div class="p-4 d-flex flex-column gap-3">
-                        <header>
-                            <h2 class="h5 mb-1">@facility.Name</h2>
-                            <p class="text-muted mb-2"><i class="fa-solid fa-location-dot me-2 text-danger"></i>@facility.Address</p>
-                        </header>
-                        <div class="d-flex flex-wrap gap-2">
-                            <span class="badge badge-soft-primary"><i class="fa-regular fa-clock me-1"></i>@facility.OpenTime?.ToString("hh\:mm") - @facility.CloseTime?.ToString("hh\:mm")</span>
-                            <span class="badge badge-soft-success">@facility.CategoryFields.Count @("dịch vụ")</span>
-                        </div>
-                        @if (!string.IsNullOrWhiteSpace(facility.Description))
-                        {
-                            <p class="text-muted mb-0">@facility.Description</p>
-                        }
-                        <div>
-                            <h3 class="h6 text-uppercase text-muted">Hạng mục nổi bật</h3>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var category in facility.CategoryFields.Take(3))
-                                {
-                                    <span class="badge bg-light text-dark">@category.CategoryFieldName</span>
-                                }
-                                @if (facility.CategoryFields.Count > 3)
-                                {
-                                    <span class="badge bg-light text-dark">+@(@facility.CategoryFields.Count - 3)</span>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </article>
+                <partial name="_FacilityCard" model="facility" />
             </div>
         }
     </div>

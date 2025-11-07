@@ -63,7 +63,11 @@
         <a class="btn btn-outline-primary" asp-page="/Facilities/Index">Xem tất cả</a>
     </div>
 
-    @if (!Model.TopFacilities.Any())
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+    }
+    else if (!Model.TopFacilities.Any())
     {
         <div class="empty-state text-center">
             <i class="fa-solid fa-building-circle-xmark fa-2x text-secondary mb-3"></i>
@@ -76,17 +80,7 @@
             @foreach (var facility in Model.TopFacilities)
             {
                 <div class="col-12 col-md-6 col-xl-4">
-                    <div class="facility-card h-100">
-                        <img src="@facility.ImageUrls.FirstOrDefault() ?? "https://placehold.co/600x400?text=SportZone"" alt="@facility.Name" />
-                        <div class="p-4 d-flex flex-column gap-2">
-                            <h3 class="h5 mb-1">@facility.Name</h3>
-                            <p class="text-muted mb-2"><i class="fa-solid fa-location-dot me-1 text-danger"></i>@facility.Address</p>
-                            <div class="d-flex flex-wrap gap-2">
-                                <span class="badge badge-soft-primary"><i class="fa-regular fa-clock me-1"></i>@facility.OpenTime?.ToString("hh\:mm") - @facility.CloseTime?.ToString("hh\:mm")</span>
-                                <span class="badge badge-soft-success">@facility.CategoryFields.Count @("hạng mục")</span>
-                            </div>
-                        </div>
-                    </div>
+                    <partial name="_FacilityCard" model="facility" />
                 </div>
             }
         </div>

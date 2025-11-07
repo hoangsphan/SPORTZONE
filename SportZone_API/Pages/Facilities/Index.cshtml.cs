@@ -17,6 +17,10 @@ namespace SportZone_API.Pages.Facilities
 
         public string? ErrorMessage { get; private set; }
 
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        public int ResultCount => Facilities.Count;
+
         public IndexModel(IFacilityService facilityService, ILogger<IndexModel> logger)
         {
             _facilityService = facilityService;
@@ -25,16 +29,31 @@ namespace SportZone_API.Pages.Facilities
 
         public async Task OnGetAsync()
         {
-            var response = await _facilityService.GetAllFacilitiesWithDetails(Search);
-
-            if (!response.Success)
+            try
             {
-                ErrorMessage = response.Message;
-                _logger.LogError("Lỗi tải cơ sở: {Message}", response.Message);
-                return;
-            }
+                if (!string.IsNullOrWhiteSpace(Search))
+                {
+                    Search = Search.Trim();
+                }
 
-            Facilities = response.Data ?? Array.Empty<FacilityDetailDto>();
+                var response = await _facilityService.GetAllFacilitiesWithDetails(Search);
+
+                if (!response.Success)
+                {
+                    ErrorMessage = response.Message ?? "Không thể tải danh sách cơ sở.";
+                    _logger.LogError("Lỗi tải cơ sở: {Message}", response.Message);
+                    return;
+                }
+
+                Facilities = response.Data?
+                    .Where(facility => facility is not null)
+                    .ToList() ?? Array.Empty<FacilityDetailDto>();
+            }
+            catch (Exception exception)
+            {
+                ErrorMessage = "Đã xảy ra lỗi trong quá trình tải cơ sở. Vui lòng thử lại sau.";
+                _logger.LogError(exception, "Lỗi không mong muốn khi tải danh sách cơ sở");
+            }
         }
     }
 }

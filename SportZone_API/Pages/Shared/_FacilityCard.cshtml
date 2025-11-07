@@ -1,0 +1,54 @@
+@model SportZone_API.DTOs.FacilityDetailDto
+@{
+    var imageUrl = Model.ImageUrls?.FirstOrDefault(url => !string.IsNullOrWhiteSpace(url))
+        ?? Url.Content("~/images/placeholder-facility.svg");
+    var openTime = Model.OpenTime?.ToString("HH\\:mm") ?? "--:--";
+    var closeTime = Model.CloseTime?.ToString("HH\\:mm") ?? "--:--";
+    var categories = Model.CategoryFields ?? new List<SportZone_API.DTOs.CategoryFieldDto>();
+    var featuredCategories = categories
+        .Where(category => !string.IsNullOrWhiteSpace(category?.CategoryFieldName))
+        .Take(3)
+        .ToList();
+    var remainingCategoryCount = Math.Max(0, categories.Count - featuredCategories.Count);
+    var hasDescription = !string.IsNullOrWhiteSpace(Model.Description);
+}
+
+<article class="facility-card h-100">
+    <img class="facility-card__image" src="@imageUrl" alt="@Model.Name" loading="lazy" />
+    <div class="p-4 d-flex flex-column gap-3">
+        <header>
+            <h2 class="h5 mb-1">@Model.Name</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.Address))
+            {
+                <p class="text-muted mb-0"><i class="fa-solid fa-location-dot me-2 text-danger"></i>@Model.Address</p>
+            }
+        </header>
+
+        <div class="facility-card__badges d-flex flex-wrap">
+            <span class="badge badge-soft-primary"><i class="fa-regular fa-clock me-1"></i>@openTime - @closeTime</span>
+            <span class="badge badge-soft-success">@categories.Count hạng mục</span>
+        </div>
+
+        @if (hasDescription)
+        {
+            <p class="facility-card__description mb-0">@Model.Description</p>
+        }
+
+        @if (featuredCategories.Any())
+        {
+            <div>
+                <h3 class="h6 text-uppercase text-muted mb-2">Hạng mục nổi bật</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var category in featuredCategories)
+                    {
+                        <span class="badge facility-card__category">@category.CategoryFieldName</span>
+                    }
+                    @if (remainingCategoryCount > 0)
+                    {
+                        <span class="badge facility-card__category">+@remainingCategoryCount</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</article>

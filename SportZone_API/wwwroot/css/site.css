@@ -32,10 +32,27 @@ h1, h2, h3 {
     box-shadow: 0 1.25rem 2.5rem rgba(15, 23, 42, 0.15);
 }
 
-.facility-card img {
+.facility-card__image {
     object-fit: cover;
     height: 220px;
     width: 100%;
+}
+
+.facility-card__badges {
+    gap: 0.5rem;
+}
+
+.facility-card__description {
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.facility-card__category {
+    background-color: #f8fafc;
+    color: #1f2937;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
 }
 
 .badge-soft-primary {
