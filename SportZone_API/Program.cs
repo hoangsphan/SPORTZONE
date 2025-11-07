@@ -241,6 +241,10 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("MyCnn");
 
 // Add services to the container.
+builder.Services
+    .AddRazorPages()
+    .AddRazorRuntimeCompilation();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -407,6 +411,7 @@ app.UseRouting(); // Thêm UseRouting
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapRazorPages();
 app.MapControllers();
 app.MapHub<NotificationHub>("/notificationhub");
 

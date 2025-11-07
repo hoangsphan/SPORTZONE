@@ -1,0 +1,47 @@
+@{
+    var title = ViewData["Title"] as string ?? "SportZone";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title - SportZone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnHtVJQw9h9NP7VDaRao7IhiHBpjz2uVH54camzatoDtrENcGukdxbYlR5c+3F4iAfDdc/K1Ji/7lu0GINuDmw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header class="shadow-sm border-bottom bg-white">
+        <nav class="navbar navbar-expand-lg container py-3">
+            <a class="navbar-brand fw-bold text-primary" asp-page="/Index">SportZone</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" asp-page="/Index">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-page="/Facilities/Index">Cơ sở</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/swagger">API</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main" class="flex-shrink-0 py-5">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="border-top py-4 mt-auto bg-light">
+        <div class="container text-center">
+            <p class="mb-1">&copy; @DateTime.UtcNow.Year SportZone. Tất cả các quyền được bảo lưu.</p>
+            <small class="text-muted">Hệ thống đặt sân thể thao với SignalR thông báo thời gian thực.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

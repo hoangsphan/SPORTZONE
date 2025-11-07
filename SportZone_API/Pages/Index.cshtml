@@ -1,0 +1,94 @@
+@page
+@model SportZone_API.Pages.IndexModel
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<section class="hero text-white mb-5">
+    <div class="d-flex flex-column gap-4">
+        <div>
+            <span class="badge bg-light text-dark px-3 py-2 rounded-pill">SportZone Platform</span>
+            <h1 class="display-5 fw-bold mt-3">Trải nghiệm đặt sân thể thao nhanh chóng và tiện lợi</h1>
+            <p class="lead">Ứng dụng SportZone cung cấp các chức năng quản lý cơ sở, đặt sân, thanh toán trực tuyến và thông báo thời gian thực, giúp chủ sân và người chơi kết nối dễ dàng.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-3">
+            <a class="btn btn-light btn-lg px-4" asp-page="/Facilities/Index"><i class="fa-solid fa-futbol me-2"></i>Khám phá cơ sở</a>
+            <a class="btn btn-outline-light btn-lg px-4" href="/swagger"><i class="fa-solid fa-code me-2"></i>Tài liệu API</a>
+        </div>
+    </div>
+</section>
+
+<section class="row g-4 mb-5">
+    <div class="col-12 col-lg-4">
+        <div class="p-4 bg-white rounded-4 h-100 shadow-sm">
+            <div class="d-flex align-items-start gap-3">
+                <span class="badge bg-primary-subtle rounded-circle p-3"><i class="fa-solid fa-calendar-check fa-lg text-primary"></i></span>
+                <div>
+                    <h3 class="h5">Đặt sân thông minh</h3>
+                    <p class="text-muted mb-0">Theo dõi lịch trống, đặt sân theo khung giờ mong muốn và nhận thông báo tự động.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="p-4 bg-white rounded-4 h-100 shadow-sm">
+            <div class="d-flex align-items-start gap-3">
+                <span class="badge bg-success-subtle rounded-circle p-3"><i class="fa-solid fa-bell fa-lg text-success"></i></span>
+                <div>
+                    <h3 class="h5">Thông báo thời gian thực</h3>
+                    <p class="text-muted mb-0">SignalR giúp gửi thông báo tức thời tới chủ sân và người chơi khi có cập nhật.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="p-4 bg-white rounded-4 h-100 shadow-sm">
+            <div class="d-flex align-items-start gap-3">
+                <span class="badge bg-warning-subtle rounded-circle p-3"><i class="fa-solid fa-coins fa-lg text-warning"></i></span>
+                <div>
+                    <h3 class="h5">Thanh toán tiện lợi</h3>
+                    <p class="text-muted mb-0">Tích hợp cổng VNPay và các chương trình khuyến mãi giúp quy trình thanh toán nhanh chóng.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="bg-white rounded-4 shadow-sm p-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="h4 mb-1">Một số cơ sở nổi bật</h2>
+            <p class="text-muted mb-0">Các cơ sở được hiển thị dựa trên dữ liệu mới nhất từ hệ thống.</p>
+        </div>
+        <a class="btn btn-outline-primary" asp-page="/Facilities/Index">Xem tất cả</a>
+    </div>
+
+    @if (!Model.TopFacilities.Any())
+    {
+        <div class="empty-state text-center">
+            <i class="fa-solid fa-building-circle-xmark fa-2x text-secondary mb-3"></i>
+            <p class="mb-0">Chưa có cơ sở nào được hiển thị. Hãy thử thêm dữ liệu trong cơ sở dữ liệu của bạn.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var facility in Model.TopFacilities)
+            {
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="facility-card h-100">
+                        <img src="@facility.ImageUrls.FirstOrDefault() ?? "https://placehold.co/600x400?text=SportZone"" alt="@facility.Name" />
+                        <div class="p-4 d-flex flex-column gap-2">
+                            <h3 class="h5 mb-1">@facility.Name</h3>
+                            <p class="text-muted mb-2"><i class="fa-solid fa-location-dot me-1 text-danger"></i>@facility.Address</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge badge-soft-primary"><i class="fa-regular fa-clock me-1"></i>@facility.OpenTime?.ToString("hh\:mm") - @facility.CloseTime?.ToString("hh\:mm")</span>
+                                <span class="badge badge-soft-success">@facility.CategoryFields.Count @("hạng mục")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

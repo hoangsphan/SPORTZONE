@@ -1,0 +1,80 @@
+@page
+@model SportZone_API.Pages.Facilities.IndexModel
+@{
+    ViewData["Title"] = "Danh sách cơ sở";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Khám phá cơ sở thể thao</h1>
+        <p class="text-muted mb-0">Lọc và tìm kiếm để lựa chọn sân phù hợp nhất với nhu cầu của bạn.</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="/Index"><i class="fa-solid fa-arrow-left me-2"></i>Quay lại trang chủ</a>
+</div>
+
+<section class="search-panel mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-md-6 col-xl-4">
+            <label class="form-label" asp-for="Search">Từ khóa</label>
+            <input class="form-control" asp-for="Search" placeholder="Nhập tên cơ sở hoặc địa chỉ..." />
+        </div>
+        <div class="col-12 col-md-3 col-xl-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-search me-2"></i>Tìm kiếm</button>
+        </div>
+        <div class="col-12 col-md-3 col-xl-2">
+            <a class="btn btn-outline-secondary w-100" asp-page="/Facilities/Index"><i class="fa-solid fa-rotate me-2"></i>Đặt lại</a>
+        </div>
+    </form>
+</section>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+else if (!Model.Facilities.Any())
+{
+    <div class="empty-state text-center">
+        <i class="fa-solid fa-circle-info fa-2x text-secondary mb-3"></i>
+        <p class="mb-0">Không tìm thấy cơ sở nào phù hợp với tiêu chí tìm kiếm.</p>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var facility in Model.Facilities)
+        {
+            <div class="col-12 col-md-6 col-xl-4">
+                <article class="facility-card h-100">
+                    <img src="@facility.ImageUrls.FirstOrDefault() ?? "https://placehold.co/600x400?text=SportZone"" alt="@facility.Name" />
+                    <div class="p-4 d-flex flex-column gap-3">
+                        <header>
+                            <h2 class="h5 mb-1">@facility.Name</h2>
+                            <p class="text-muted mb-2"><i class="fa-solid fa-location-dot me-2 text-danger"></i>@facility.Address</p>
+                        </header>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge badge-soft-primary"><i class="fa-regular fa-clock me-1"></i>@facility.OpenTime?.ToString("hh\:mm") - @facility.CloseTime?.ToString("hh\:mm")</span>
+                            <span class="badge badge-soft-success">@facility.CategoryFields.Count @("dịch vụ")</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(facility.Description))
+                        {
+                            <p class="text-muted mb-0">@facility.Description</p>
+                        }
+                        <div>
+                            <h3 class="h6 text-uppercase text-muted">Hạng mục nổi bật</h3>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var category in facility.CategoryFields.Take(3))
+                                {
+                                    <span class="badge bg-light text-dark">@category.CategoryFieldName</span>
+                                }
+                                @if (facility.CategoryFields.Count > 3)
+                                {
+                                    <span class="badge bg-light text-dark">+@(@facility.CategoryFields.Count - 3)</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+}
