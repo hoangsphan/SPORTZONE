@@ -101,6 +101,9 @@ else
                     <i class="fa-solid fa-share-nodes me-2"></i>
                     <span class="share-trigger__label">Chia sẻ cơ sở</span>
                 </button>
+                <a class="btn btn-outline-info" href="#regulations">
+                    <i class="fa-solid fa-scale-balanced me-2"></i>Quy định cơ sở
+                </a>
             </div>
             @if (Model.Facility.CategoryFields?.Any(category => !string.IsNullOrWhiteSpace(category?.CategoryFieldName)) == true)
             {
@@ -231,6 +234,60 @@ else
                             else
                             {
                                 <p class="text-muted small mb-0">Dịch vụ chưa có mô tả chi tiết.</p>
+                            }
+                        </article>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section id="regulations" class="mb-5">
+        <div class="section-heading d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="h5 mb-1">Quy định &amp; lưu ý</h2>
+                <p class="text-muted mb-0">Những quy tắc giúp trải nghiệm tại cơ sở luôn an toàn và công bằng.</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.RegulationsErrorMessage))
+        {
+            <div class="alert alert-warning" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>@Model.RegulationsErrorMessage
+            </div>
+        }
+        else if (!Model.Regulations.Any())
+        {
+            <div class="empty-state text-center">
+                <i class="fa-solid fa-scale-balanced fa-2x text-secondary mb-3"></i>
+                <p class="mb-0">Cơ sở chưa cập nhật quy định cụ thể.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var regulation in Model.Regulations)
+                {
+                    <div class="col-12 col-lg-6">
+                        <article class="regulation-card h-100">
+                            <header class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <h3 class="h6 mb-0">@regulation.Title</h3>
+                                <span class="badge @regulation.StatusCssClass">@regulation.StatusLabel</span>
+                            </header>
+                            @{ var updatedDisplay = Model.FormatTimestamp(regulation.LastUpdatedAt); }
+                            @if (!string.IsNullOrWhiteSpace(updatedDisplay))
+                            {
+                                <p class="text-muted small mb-2">
+                                    <i class="fa-regular fa-clock me-2"></i>Cập nhật @updatedDisplay
+                                </p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(regulation.Description))
+                            {
+                                <p class="regulation-card__description mb-0">@regulation.Description</p>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-0">Quy định chưa có mô tả chi tiết.</p>
                             }
                         </article>
                     </div>

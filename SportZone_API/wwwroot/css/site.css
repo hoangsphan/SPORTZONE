@@ -105,9 +105,19 @@ h1, h2, h3 {
     background-color: rgba(248, 113, 113, 0.14);
 }
 
+.badge-soft-info {
+    color: #0ea5e9;
+    background-color: rgba(14, 165, 233, 0.14);
+}
+
 .badge-soft-secondary {
     color: #6b7280;
     background-color: rgba(107, 114, 128, 0.14);
+}
+
+.badge-soft-neutral {
+    color: #475569;
+    background-color: rgba(71, 85, 105, 0.12);
 }
 
 .filter-badge {
@@ -227,6 +237,25 @@ h1, h2, h3 {
 
 .field-card__pricing li:last-child {
     border-bottom: none;
+}
+
+.regulation-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    box-shadow: 0 0.5rem 1.75rem rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.regulation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1rem 2.25rem rgba(15, 23, 42, 0.14);
+}
+
+.regulation-card__description {
+    color: #374151;
+    line-height: 1.6;
 }
 
 @media (max-width: 991.98px) {

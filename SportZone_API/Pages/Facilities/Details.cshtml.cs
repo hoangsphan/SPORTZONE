@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SportZone_API.DTOs;
+using SportZone_API.Models;
 using SportZone_API.Services.Interfaces;
 
 namespace SportZone_API.Pages.Facilities
@@ -18,6 +19,7 @@ namespace SportZone_API.Pages.Facilities
         private readonly IFieldService _fieldService;
         private readonly IServiceService _serviceService;
         private readonly IFieldPricingService _fieldPricingService;
+        private readonly IRegulationFacilityService _regulationFacilityService;
         private readonly ILogger<DetailsModel> _logger;
 
         public DetailsModel(
@@ -25,12 +27,14 @@ namespace SportZone_API.Pages.Facilities
             IFieldService fieldService,
             IServiceService serviceService,
             IFieldPricingService fieldPricingService,
+            IRegulationFacilityService regulationFacilityService,
             ILogger<DetailsModel> logger)
         {
             _facilityService = facilityService;
             _fieldService = fieldService;
             _serviceService = serviceService;
             _fieldPricingService = fieldPricingService;
+            _regulationFacilityService = regulationFacilityService;
             _logger = logger;
         }
 
@@ -40,10 +44,15 @@ namespace SportZone_API.Pages.Facilities
 
         public IReadOnlyList<ServiceDTO> Services { get; private set; } = Array.Empty<ServiceDTO>();
 
+        public IReadOnlyList<RegulationFacilityViewModel> Regulations { get; private set; }
+            = Array.Empty<RegulationFacilityViewModel>();
+
         public IReadOnlyDictionary<int, IReadOnlyList<FieldPricingDto>> FieldPricing { get; private set; }
             = new Dictionary<int, IReadOnlyList<FieldPricingDto>>();
 
         public string? ErrorMessage { get; private set; }
+
+        public string? RegulationsErrorMessage { get; private set; }
 
         public bool HasFacility => Facility is not null;
 
@@ -97,6 +106,8 @@ namespace SportZone_API.Pages.Facilities
                 {
                     await LoadFieldPricingAsync();
                 }
+
+                await LoadRegulationsAsync(id);
 
                 return Page();
             }
@@ -167,6 +178,73 @@ namespace SportZone_API.Pages.Facilities
         public FacilityScheduleStatus GetFacilityScheduleStatus()
         {
             return FacilityScheduleHelper.Evaluate(Facility?.OpenTime, Facility?.CloseTime, EvaluationTimestamp);
+        }
+
+        public string FormatTimestamp(DateTime? value)
+        {
+            return value.HasValue
+                ? value.Value.ToString("HH:mm 'ngày' dd/MM/yyyy", VietnameseCulture)
+                : string.Empty;
+        }
+
+        private async Task LoadRegulationsAsync(int facilityId)
+        {
+            try
+            {
+                var regulations = await _regulationFacilityService.GetRegulationFacilitiesByFacilityId(facilityId);
+
+                Regulations = (regulations ?? Enumerable.Empty<RegulationFacility>())
+                    .Where(regulation => regulation is not null && !string.IsNullOrWhiteSpace(regulation.Title))
+                    .Select(CreateRegulationViewModel)
+                    .OrderByDescending(regulation => regulation.LastUpdatedAt ?? DateTime.MinValue)
+                    .ThenBy(regulation => regulation.Title)
+                    .ToList();
+
+                RegulationsErrorMessage = null;
+            }
+            catch (Exception exception)
+            {
+                Regulations = Array.Empty<RegulationFacilityViewModel>();
+                RegulationsErrorMessage = "Không thể tải quy định của cơ sở lúc này.";
+                _logger.LogWarning(exception, "Không thể tải quy định cho cơ sở {FacilityId}", facilityId);
+            }
+        }
+
+        private static RegulationFacilityViewModel CreateRegulationViewModel(RegulationFacility regulation)
+        {
+            var (statusLabel, statusClass) = GetStatusMetadata(regulation.Status);
+            return new RegulationFacilityViewModel(
+                regulation.Title,
+                regulation.Description,
+                statusLabel,
+                statusClass,
+                regulation.CreateAt,
+                regulation.UpdateAt);
+        }
+
+        private static (string Label, string CssClass) GetStatusMetadata(string? status)
+        {
+            var normalized = status?.Trim().ToLowerInvariant();
+            return normalized switch
+            {
+                "active" or "enabled" or "enable" => ("Đang áp dụng", "badge-soft-success"),
+                "inactive" or "disabled" or "disable" => ("Tạm ngưng", "badge-soft-secondary"),
+                "pending" or "awaiting" => ("Chờ áp dụng", "badge-soft-info"),
+                "draft" => ("Bản nháp", "badge-soft-warning"),
+                "archived" => ("Đã lưu trữ", "badge-soft-neutral"),
+                _ => ("Đang cập nhật", "badge-soft-secondary")
+            };
+        }
+
+        public sealed record RegulationFacilityViewModel(
+            string Title,
+            string? Description,
+            string StatusLabel,
+            string StatusCssClass,
+            DateTime? CreatedAt,
+            DateTime? UpdatedAt)
+        {
+            public DateTime? LastUpdatedAt => UpdatedAt ?? CreatedAt;
         }
     }
 }
