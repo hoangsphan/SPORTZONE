@@ -2,26 +2,17 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SportZone_API.DTOs;
+using SportZone_API.Extensions;
 using SportZone_API.Hubs;
-using SportZone_API.Mappings;
-using SportZone_API.Models;
-using SportZone_API.Repositories;
-using SportZone_API.Repositories.Interfaces;
-using SportZone_API.Repository;
-using SportZone_API.Repository.Interfaces;
-using SportZone_API.Services;
-using SportZone_API.Services.Interfaces;
 using System.Text;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("MyCnn");
+
+const string DefaultJwtSigningKey = "your-256-bit-secret-key-for-sportzone-application";
 
 var razorPagesBuilder = builder.Services.AddRazorPages();
 if (builder.Environment.IsDevelopment())
@@ -39,11 +30,23 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()
+    ?.Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Select(origin => origin.Trim())
+    .ToArray();
+
+if (allowedOrigins is null || allowedOrigins.Length == 0)
+{
+    allowedOrigins = new[] { "http://localhost:5173" };
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -51,6 +54,19 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSignalR();
+
+builder.Services
+    .AddSportZoneInfrastructure(builder.Configuration, builder.Environment)
+    .AddSportZoneApplicationServices()
+    .AddSportZoneBackgroundServices();
+
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    jwtKey = DefaultJwtSigningKey;
+}
+
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -65,8 +81,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"] ?? "your-256-bit-secret-key-for-sportzone-application")),
+        IssuerSigningKey = signingKey,
         ClockSkew = TimeSpan.Zero
     };
 })
@@ -78,83 +93,6 @@ builder.Services.AddAuthentication(options =>
     options.CallbackPath = builder.Configuration["Authentication:Google:CallbackPath"] ?? "/signin-google";
     options.SaveTokens = true;
 });
-
-builder.Services.AddDbContext<SportZoneContext>(options =>
-    options.UseSqlServer(connectionString));
-
-builder.Services.AddAutoMapper(typeof(MappingField).Assembly);
-builder.Services.AddAutoMapper(typeof(MappingOrder).Assembly);
-builder.Services.AddAutoMapper(typeof(MappingBooking).Assembly);
-
-builder.Services.AddMemoryCache();
-builder.Services.Configure<SendEmail>(builder.Configuration.GetSection("SendEmail"));
-
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-
-builder.Services.AddScoped<IRegisterService, RegisterService>();
-builder.Services.AddScoped<IRegisterRepository, RegisterRepository>();
-
-builder.Services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
-builder.Services.AddScoped<IForgotPasswordRepository, ForgotPasswordRepository>();
-
-builder.Services.AddScoped<IFacilityService, FacilityService>();
-builder.Services.AddScoped<IFacilityRepository, FacilityRepository>();
-
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddScoped<IBookingService, BookingService>();
-
-builder.Services.AddScoped<IFieldService, FieldService>();
-builder.Services.AddScoped<IFieldRepository, FieldRepository>();
-
-builder.Services.AddScoped<IFieldBookingScheduleRepository, FieldBookingScheduleRepository>();
-builder.Services.AddScoped<IFieldBookingScheduleService, FieldBookingScheduleService>();
-
-builder.Services.AddScoped<IServiceService, ServiceService>();
-builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
-
-builder.Services.AddScoped<IFieldPricingRepository, FieldPricingRepository>();
-builder.Services.AddScoped<IFieldPricingService, FieldPricingService>();
-
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IOrderService, SportZone_API.Services.OrderService>();
-
-builder.Services.AddScoped<IOrderFieldIdRepository, OrderFieldIdRepository>();
-builder.Services.AddScoped<IOrderFieldIdService, OrderFieldIdService>();
-
-builder.Services.AddScoped<IOrderServiceRepository, OrderServiceRepository>();
-builder.Services.AddScoped<IOrderServiceService, OrderServiceService>();
-
-builder.Services.AddScoped<IStaffRepository, StaffRepository>();
-builder.Services.AddScoped<IStaffService, StaffService>();
-
-builder.Services.AddScoped<ICategoryFieldRepository, CategoryFieldRepository>();
-builder.Services.AddScoped<ICategoryFieldService, CategoryFieldService>();
-
-builder.Services.AddScoped<IAdminRepository, AdminRepository>();
-builder.Services.AddScoped<IAdminService, AdminService>();
-
-builder.Services.AddScoped<IRegulationSystemRepository, RegulationSystemRepository>();
-builder.Services.AddScoped<IRegulationSystemService, RegulationSystemService>();
-
-builder.Services.AddScoped<IRegulationFacilityRepository, RegulationFacilityRepository>();
-builder.Services.AddScoped<IRegulationFacilityService, RegulationFacilityService>();
-
-builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
-builder.Services.AddScoped<IDiscountService, DiscountService>();
-
-builder.Services.AddScoped<IVNPayService, VNPayService>();
-
-builder.Services.AddHostedService<ScheduleStatusUpdaterService>();
-
-builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-
-builder.Services.AddHostedService<ReservationCleanupService>();
-
-builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -170,27 +108,32 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-app.UseExceptionHandler(appBuilder =>
-{
-    appBuilder.Run(async context =>
-    {
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
-        var error = context.Features.Get<IExceptionHandlerFeature>();
-        if (error != null)
-        {
-            await context.Response.WriteAsJsonAsync(new
-            {
-                error = error.Error.Message
-            });
-        }
-    });
-});
-
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else
+{
+    app.UseExceptionHandler(appBuilder =>
+    {
+        appBuilder.Run(async context =>
+        {
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "application/json";
+            var error = context.Features.Get<IExceptionHandlerFeature>();
+            if (error is not null)
+            {
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = error.Error.Message
+                });
+            }
+        });
+    });
+
+    app.UseHsts();
 }
 
 app.UseStaticFiles();
