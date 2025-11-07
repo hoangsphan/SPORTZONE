@@ -39,6 +39,15 @@
             </select>
         </div>
         <div class="col-12 col-md-6 col-lg-2">
+            <label class="form-label" asp-for="SortBy">Sắp xếp</label>
+            <select class="form-select" asp-for="SortBy">
+                @foreach (var option in Model.SortOptions)
+                {
+                    <option value="@option.Value">@option.Label</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-6 col-lg-2">
             <div class="form-check form-switch mt-4 mt-md-0">
                 <input class="form-check-input" asp-for="OpenNow" />
                 <label class="form-check-label" for="OpenNow">Chỉ hiển thị cơ sở đang mở</label>
@@ -79,7 +88,10 @@ else
                 <text>mới nhất trên hệ thống</text>
             }
         </p>
-        <span class="text-muted small">Trạng thái cập nhật lúc @Model.CurrentTimeDisplay</span>
+        <div class="d-flex flex-column align-items-lg-end gap-1 text-muted small">
+            <span>Trạng thái cập nhật lúc @Model.CurrentTimeDisplay</span>
+            <span>Sắp xếp: <strong class="text-body">@Model.ActiveSortOption.Label</strong></span>
+        </div>
     </div>
 
     @if (Model.AppliedFilters.Count > 0)

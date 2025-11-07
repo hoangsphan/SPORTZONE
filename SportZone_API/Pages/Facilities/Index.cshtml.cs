@@ -15,6 +15,21 @@ namespace SportZone_API.Pages.Facilities
         private readonly ICategoryFieldService _categoryFieldService;
         private readonly ILogger<IndexModel> _logger;
 
+        private const string DefaultSortKey = "relevance";
+        private const string SortByNameKey = "name";
+        private const string SortByCategoriesKey = "categories";
+        private const string SortByStatusKey = "status";
+
+        private static readonly SortOption DefaultSortOption = new(DefaultSortKey, "Mặc định", "thứ tự gợi ý");
+
+        private static readonly SortOption[] SortOptionDefinitions =
+        {
+            DefaultSortOption,
+            new(SortByNameKey, "Tên (A-Z)", "tên cơ sở (A-Z)"),
+            new(SortByCategoriesKey, "Nhiều hạng mục", "số lượng hạng mục nhiều nhất"),
+            new(SortByStatusKey, "Trạng thái mở cửa", "trạng thái mở cửa hiện tại")
+        };
+
         public IReadOnlyList<FacilityDetailDto> Facilities { get; private set; } = Array.Empty<FacilityDetailDto>();
 
         public IReadOnlyList<CategoryFieldDto> CategoryOptions { get; private set; } = Array.Empty<CategoryFieldDto>();
@@ -33,6 +48,9 @@ namespace SportZone_API.Pages.Facilities
         [BindProperty(SupportsGet = true)]
         public bool? OpenNow { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string? SortBy { get; set; }
+
         public IReadOnlyList<string> AppliedFilters { get; private set; } = Array.Empty<string>();
 
         public string? ErrorMessage { get; private set; }
@@ -45,11 +63,17 @@ namespace SportZone_API.Pages.Facilities
 
         public bool HasOpenNowFilter => OpenNow is true;
 
+        public bool HasSort => !string.Equals(ActiveSortOption.Value, DefaultSortKey, StringComparison.OrdinalIgnoreCase);
+
         public int ResultCount => Facilities.Count;
 
         public DateTime EvaluationTimestamp { get; private set; }
 
         public string CurrentTimeDisplay => EvaluationTimestamp.ToString("HH:mm");
+
+        public IReadOnlyList<SortOption> SortOptions => SortOptionDefinitions;
+
+        public SortOption ActiveSortOption { get; private set; } = DefaultSortOption;
 
         public IndexModel(
             IFacilityService facilityService,
@@ -64,6 +88,8 @@ namespace SportZone_API.Pages.Facilities
         public async Task OnGetAsync()
         {
             EvaluationTimestamp = DateTime.Now;
+            ActiveSortOption = ResolveSortOption(SortBy);
+            SortBy = ActiveSortOption.Value;
             try
             {
                 Search = NormalizeQuery(Search);
@@ -114,6 +140,7 @@ namespace SportZone_API.Pages.Facilities
                         .ToList();
                 }
 
+                facilities = ApplySort(facilities, ActiveSortOption);
                 Facilities = facilities;
 
                 var appliedFilters = new List<string>();
@@ -135,6 +162,11 @@ namespace SportZone_API.Pages.Facilities
                 if (HasOpenNowFilter)
                 {
                     appliedFilters.Add("cơ sở đang mở cửa");
+                }
+
+                if (HasSort)
+                {
+                    appliedFilters.Add($"sắp xếp theo {ActiveSortOption.FilterDescription}");
                 }
 
                 AppliedFilters = appliedFilters;
@@ -227,9 +259,57 @@ namespace SportZone_API.Pages.Facilities
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
 
+        private static SortOption ResolveSortOption(string? sortValue)
+        {
+            if (string.IsNullOrWhiteSpace(sortValue))
+            {
+                return DefaultSortOption;
+            }
+
+            var normalized = sortValue.Trim();
+            return SortOptionDefinitions.FirstOrDefault(option =>
+                       string.Equals(option.Value, normalized, StringComparison.OrdinalIgnoreCase))
+                   ?? DefaultSortOption;
+        }
+
+        private List<FacilityDetailDto> ApplySort(List<FacilityDetailDto> facilities, SortOption sortOption)
+        {
+            switch (sortOption.Value)
+            {
+                case SortByNameKey:
+                    return facilities
+                        .OrderBy(facility => facility?.Name ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                        .ThenBy(facility => facility?.Address ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                        .ToList();
+                case SortByCategoriesKey:
+                    return facilities
+                        .OrderByDescending(facility => facility?.CategoryFields?.Count ?? 0)
+                        .ThenBy(facility => facility?.Name ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                        .ToList();
+                case SortByStatusKey:
+                    var evaluationTime = EvaluationTimestamp;
+                    return facilities
+                        .Select(facility => new
+                        {
+                            Facility = facility,
+                            Status = FacilityScheduleHelper.Evaluate(facility?.OpenTime, facility?.CloseTime, evaluationTime)
+                        })
+                        .OrderByDescending(item => item.Status.IsOpen)
+                        .ThenBy(item => item.Status.NextChangeIsTomorrow ? 1 : 0)
+                        .ThenBy(item => item.Status.NextChangeTime ?? TimeOnly.MaxValue)
+                        .ThenBy(item => item.Facility?.Name ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                        .Select(item => item.Facility!)
+                        .ToList();
+                default:
+                    return facilities;
+            }
+        }
+
         public FacilityScheduleStatus GetScheduleStatus(FacilityDetailDto facility)
         {
             return FacilityScheduleHelper.Evaluate(facility.OpenTime, facility.CloseTime, EvaluationTimestamp);
         }
+
+        public record SortOption(string Value, string Label, string FilterDescription);
     }
 }
