@@ -1,5 +1,10 @@
 @{
     var title = ViewData["Title"] as string ?? "SportZone";
+    var currentPage = ViewContext.RouteData.Values["page"] as string ?? string.Empty;
+    var isHomeActive = string.Equals(currentPage, "/Index", StringComparison.OrdinalIgnoreCase);
+    var isFacilitiesActive = currentPage.StartsWith("/Facilities", StringComparison.OrdinalIgnoreCase);
+    var isBookingsActive = currentPage.StartsWith("/Bookings", StringComparison.OrdinalIgnoreCase)
+        || currentPage.StartsWith("/Payments", StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -20,9 +25,15 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" asp-page="/Index">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-page="/Facilities/Index">Cơ sở</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-page="/Bookings/History">Lịch sử đặt sân</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link@(isHomeActive ? " active" : string.Empty)" asp-page="/Index"@(isHomeActive ? " aria-current=\"page\"" : string.Empty)>Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link@(isFacilitiesActive ? " active" : string.Empty)" asp-page="/Facilities/Index"@(isFacilitiesActive ? " aria-current=\"page\"" : string.Empty)>Cơ sở</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link@(isBookingsActive ? " active" : string.Empty)" asp-page="/Bookings/History"@(isBookingsActive ? " aria-current=\"page\"" : string.Empty)>Lịch sử đặt sân</a>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="/swagger">API</a></li>
                 </ul>
             </div>

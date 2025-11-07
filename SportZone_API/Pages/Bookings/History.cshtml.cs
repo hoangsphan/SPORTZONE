@@ -86,6 +86,18 @@ namespace SportZone_API.Pages.Bookings
                 return;
             }
 
+            if (From.HasValue && To.HasValue && From > To)
+            {
+                ErrorMessage = "Khoảng thời gian lọc không hợp lệ. Ngày bắt đầu phải sớm hơn hoặc trùng với ngày kết thúc.";
+                _logger.LogWarning(
+                    "Khoảng thời gian không hợp lệ khi tải lịch sử đặt sân cho người dùng {UserId}: {From} > {To}",
+                    UserId,
+                    From,
+                    To);
+                Bookings = Array.Empty<BookingResponseDTO>();
+                return;
+            }
+
             try
             {
                 var response = await _bookingService.GetUserBookingsAsync(UserId.Value);
