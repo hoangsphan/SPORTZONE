@@ -20,6 +20,11 @@ namespace SportZone_API.Pages.Facilities
         private const string SortByCategoriesKey = "categories";
         private const string SortByStatusKey = "status";
 
+        private const int DefaultPageSize = 9;
+        private const int PaginationWindowSize = 5;
+
+        private static readonly int[] PageSizeChoices = { 9, 18, 36 };
+
         private static readonly SortOption DefaultSortOption = new(DefaultSortKey, "Mặc định", "thứ tự gợi ý");
 
         private static readonly SortOption[] SortOptionDefinitions =
@@ -51,6 +56,12 @@ namespace SportZone_API.Pages.Facilities
         [BindProperty(SupportsGet = true)]
         public string? SortBy { get; set; }
 
+        [BindProperty(SupportsGet = true, Name = "page")]
+        public int? PageNumber { get; set; }
+
+        [BindProperty(SupportsGet = true, Name = "pageSize")]
+        public int? PageSize { get; set; }
+
         public IReadOnlyList<string> AppliedFilters { get; private set; } = Array.Empty<string>();
 
         public string? ErrorMessage { get; private set; }
@@ -65,7 +76,23 @@ namespace SportZone_API.Pages.Facilities
 
         public bool HasSort => !string.Equals(ActiveSortOption.Value, DefaultSortKey, StringComparison.OrdinalIgnoreCase);
 
-        public int ResultCount => Facilities.Count;
+        public int ResultCount { get; private set; }
+
+        public int DisplayedCount => Facilities.Count;
+
+        public int CurrentPage { get; private set; } = 1;
+
+        public int TotalPages { get; private set; } = 1;
+
+        public int CurrentPageSize { get; private set; } = DefaultPageSize;
+
+        public int FirstItemNumber { get; private set; }
+
+        public int LastItemNumber { get; private set; }
+
+        public bool HasPreviousPage => CurrentPage > 1;
+
+        public bool HasNextPage => CurrentPage < TotalPages;
 
         public DateTime EvaluationTimestamp { get; private set; }
 
@@ -74,6 +101,12 @@ namespace SportZone_API.Pages.Facilities
         public IReadOnlyList<SortOption> SortOptions => SortOptionDefinitions;
 
         public SortOption ActiveSortOption { get; private set; } = DefaultSortOption;
+
+        public IReadOnlyList<int> PageSizeOptions => PageSizeChoices;
+
+        public IReadOnlyList<int> PaginationPages { get; private set; } = Array.Empty<int>();
+
+        public bool ShowPagination => TotalPages > 1;
 
         public IndexModel(
             IFacilityService facilityService,
@@ -107,6 +140,11 @@ namespace SportZone_API.Pages.Facilities
                     _logger.LogError("Lỗi tải cơ sở: {Message}", facilitiesResponse?.Message);
                     Facilities = Array.Empty<FacilityDetailDto>();
                     AppliedFilters = Array.Empty<string>();
+                    ResultCount = 0;
+                    TotalPages = 1;
+                    CurrentPage = 1;
+                    CurrentPageSize = DefaultPageSize;
+                    PaginationPages = Array.Empty<int>();
                     return;
                 }
 
@@ -141,7 +179,33 @@ namespace SportZone_API.Pages.Facilities
                 }
 
                 facilities = ApplySort(facilities, ActiveSortOption);
-                Facilities = facilities;
+
+                CurrentPageSize = NormalizePageSize(PageSize);
+                PageSize = CurrentPageSize;
+
+                ResultCount = facilities.Count;
+                TotalPages = CalculateTotalPages(ResultCount, CurrentPageSize);
+
+                CurrentPage = NormalizePageNumber(PageNumber, TotalPages);
+                PageNumber = CurrentPage;
+
+                Facilities = facilities
+                    .Skip((CurrentPage - 1) * CurrentPageSize)
+                    .Take(CurrentPageSize)
+                    .ToList();
+
+                if (ResultCount == 0)
+                {
+                    FirstItemNumber = 0;
+                    LastItemNumber = 0;
+                }
+                else
+                {
+                    FirstItemNumber = ((CurrentPage - 1) * CurrentPageSize) + 1;
+                    LastItemNumber = FirstItemNumber + Facilities.Count - 1;
+                }
+
+                PaginationPages = BuildPaginationWindow(CurrentPage, TotalPages);
 
                 var appliedFilters = new List<string>();
                 if (HasSearch)
@@ -308,6 +372,122 @@ namespace SportZone_API.Pages.Facilities
         public FacilityScheduleStatus GetScheduleStatus(FacilityDetailDto facility)
         {
             return FacilityScheduleHelper.Evaluate(facility.OpenTime, facility.CloseTime, EvaluationTimestamp);
+        }
+
+        public IDictionary<string, object?> BuildRouteValues(int pageNumber)
+        {
+            var routeValues = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["page"] = pageNumber
+            };
+
+            if (HasSearch)
+            {
+                routeValues["Search"] = Search;
+            }
+
+            if (HasCategoryFilter)
+            {
+                routeValues["Category"] = Category;
+            }
+
+            if (HasAddressFilter)
+            {
+                routeValues["Address"] = Address;
+            }
+
+            if (HasOpenNowFilter)
+            {
+                routeValues["OpenNow"] = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(SortBy))
+            {
+                routeValues["SortBy"] = SortBy;
+            }
+
+            if (CurrentPageSize != DefaultPageSize)
+            {
+                routeValues["pageSize"] = CurrentPageSize;
+            }
+
+            return routeValues;
+        }
+
+        private static int NormalizePageSize(int? requestedPageSize)
+        {
+            if (requestedPageSize is null)
+            {
+                return DefaultPageSize;
+            }
+
+            var size = requestedPageSize.Value;
+            if (PageSizeChoices.Contains(size))
+            {
+                return size;
+            }
+
+            var closest = PageSizeChoices
+                .OrderBy(option => Math.Abs(option - size))
+                .ThenBy(option => option)
+                .FirstOrDefault();
+
+            return closest == 0 ? DefaultPageSize : closest;
+        }
+
+        private static int NormalizePageNumber(int? requestedPage, int totalPages)
+        {
+            if (totalPages <= 0)
+            {
+                return 1;
+            }
+
+            var page = requestedPage.GetValueOrDefault(1);
+            if (page < 1)
+            {
+                return 1;
+            }
+
+            if (page > totalPages)
+            {
+                return totalPages;
+            }
+
+            return page;
+        }
+
+        private static int CalculateTotalPages(int totalResults, int pageSize)
+        {
+            if (pageSize <= 0)
+            {
+                return 1;
+            }
+
+            if (totalResults <= 0)
+            {
+                return 1;
+            }
+
+            return (int)Math.Ceiling(totalResults / (double)pageSize);
+        }
+
+        private static IReadOnlyList<int> BuildPaginationWindow(int currentPage, int totalPages)
+        {
+            if (totalPages <= PaginationWindowSize)
+            {
+                return Enumerable.Range(1, totalPages).ToList();
+            }
+
+            var halfWindow = PaginationWindowSize / 2;
+            var start = Math.Max(1, currentPage - halfWindow);
+            var end = Math.Min(totalPages, start + PaginationWindowSize - 1);
+
+            if (end - start + 1 < PaginationWindowSize)
+            {
+                start = Math.Max(1, end - PaginationWindowSize + 1);
+            }
+
+            return Enumerable.Range(start, end - start + 1).ToList();
         }
 
         public record SortOption(string Value, string Label, string FilterDescription);
