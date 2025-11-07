@@ -180,7 +180,7 @@ namespace SportZone_API.Repositories
                 {
                     throw new ArgumentException($"Cơ sở với ID {fieldDto.FacId} không tồn tại.");
                 }
-                if (!await CategoryExistAsync(fieldDto.CategoryId))
+                if (!await CategoryExistsAsync(fieldDto.CategoryId))
                 {
                     throw new ArgumentException($"Loại sân với ID {fieldDto.CategoryId} không tồn tại.");
                 }
@@ -205,7 +205,7 @@ namespace SportZone_API.Repositories
                 {
                     return false;
                 }
-                if (fieldDto.CategoryId.HasValue && !await CategoryExistAsync(fieldDto.CategoryId.Value))
+                if (fieldDto.CategoryId.HasValue && !await CategoryExistsAsync(fieldDto.CategoryId.Value))
                 {
                     throw new ArgumentException($"Loại sân với ID {fieldDto.CategoryId.Value} không tồn tại.");
                 }
@@ -248,19 +248,24 @@ namespace SportZone_API.Repositories
             return await _context.Facilities.AnyAsync(f => f.FacId == facId);
         }
 
-        public async Task<bool> CategoryExistAsync(int categoryId)
+        public async Task<bool> CategoryExistsAsync(int categoryId)
         {
             return await _context.CategoryFields.AnyAsync(c => c.CategoryFieldId == categoryId);
         }
 
         public async Task<bool> FieldNameExistsInFacilityAsync(string fieldName, int facId)
         {
-            return await _context.Fields.AnyAsync(f => f.FieldName.ToLower() == fieldName && f.FacId == facId);
-        }
+            if (string.IsNullOrWhiteSpace(fieldName))
+            {
+                return false;
+            }
 
-        public Task<bool> CategoryExistsAsync(int categoryId)
-        {
-            throw new NotImplementedException();
+            var normalizedFieldName = fieldName.Trim().ToLowerInvariant();
+
+            return await _context.Fields
+                .AnyAsync(f => f.FacId == facId
+                               && f.FieldName != null
+                               && f.FieldName.ToLower() == normalizedFieldName);
         }
     }
 }
