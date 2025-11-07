@@ -15,7 +15,7 @@
 
 <article class="facility-card h-100">
     <img class="facility-card__image" src="@imageUrl" alt="@Model.Name" loading="lazy" />
-    <div class="p-4 d-flex flex-column gap-3">
+    <div class="p-4 d-flex flex-column gap-3 h-100">
         <header>
             <h2 class="h5 mb-1">@Model.Name</h2>
             @if (!string.IsNullOrWhiteSpace(Model.Address))
@@ -50,5 +50,12 @@
                 </div>
             </div>
         }
+
+        <footer class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+            <span class="text-muted small"><i class="fa-solid fa-layer-group me-1"></i>@categories.Count hạng mục</span>
+            <a class="btn btn-sm btn-outline-primary" asp-page="/Facilities/Details" asp-route-id="@Model.FacId">
+                Xem chi tiết
+            </a>
+        </footer>
     </div>
 </article>

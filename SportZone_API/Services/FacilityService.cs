@@ -103,6 +103,46 @@ namespace SportZone_API.Services
             }
         }
 
+        public async Task<ServiceResponse<FacilityDetailDto>> GetFacilityDetailsAsync(int facilityId)
+        {
+            if (facilityId <= 0)
+            {
+                return new ServiceResponse<FacilityDetailDto>
+                {
+                    Success = false,
+                    Message = "Mã cơ sở không hợp lệ."
+                };
+            }
+
+            try
+            {
+                var facility = await _repository.GetByIdAsync(facilityId);
+                if (facility is null)
+                {
+                    return new ServiceResponse<FacilityDetailDto>
+                    {
+                        Success = true,
+                        Message = "Không tìm thấy cơ sở theo yêu cầu."
+                    };
+                }
+
+                var facilityDetail = _mapper.Map<FacilityDetailDto>(facility);
+                return new ServiceResponse<FacilityDetailDto>
+                {
+                    Success = true,
+                    Data = facilityDetail
+                };
+            }
+            catch (Exception exception)
+            {
+                return new ServiceResponse<FacilityDetailDto>
+                {
+                    Success = false,
+                    Message = $"Đã xảy ra lỗi khi tải thông tin cơ sở: {exception.Message}"
+                };
+            }
+        }
+
         public async Task<ServiceResponse<List<FacilityDetailDto>>> GetFacilitiesByFilter(string? categoryFieldName = null, string? address = null)
         {
             try

@@ -6,6 +6,7 @@ namespace SportZone_API.Services.Interfaces
     {
         Task<ServiceResponse<List<FacilityDto>>> GetAllFacilities(string? searchText = null);
         Task<ServiceResponse<List<FacilityDetailDto>>> GetAllFacilitiesWithDetails(string? searchText = null);
+        Task<ServiceResponse<FacilityDetailDto>> GetFacilityDetailsAsync(int facilityId);
         Task<ServiceResponse<List<FacilityDetailDto>>> GetFacilitiesByFilter(string? categoryFieldName = null, string? address = null);
         Task<ServiceResponse<List<FacilityDto>>> GetFacilitiesByUserId(int userId);
         Task<FacilityDto?> GetFacilityById(int id);

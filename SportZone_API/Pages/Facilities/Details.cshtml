@@ -1,0 +1,189 @@
+@page "{id:int}"
+@model SportZone_API.Pages.Facilities.DetailsModel
+@{
+    var title = Model.Facility?.Name ?? "Chi tiết cơ sở";
+    ViewData["Title"] = title;
+    var imageUrl = Model.Facility?.ImageUrls?.FirstOrDefault(url => !string.IsNullOrWhiteSpace(url))
+        ?? Url.Content("~/images/placeholder-facility.svg");
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">@title</h1>
+        <p class="text-muted mb-0">Thông tin chi tiết về cơ sở thể thao và các tiện ích liên quan.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary" asp-page="/Facilities/Index"><i class="fa-solid fa-arrow-left me-2"></i>Quay lại danh sách</a>
+        <a class="btn btn-outline-primary" href="/swagger"><i class="fa-solid fa-code me-2"></i>Xem API</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+else if (!Model.HasFacility)
+{
+    <div class="empty-state text-center">
+        <i class="fa-solid fa-circle-info fa-2x text-secondary mb-3"></i>
+        <p class="mb-0">Không tìm thấy cơ sở theo yêu cầu.</p>
+    </div>
+}
+else
+{
+    <section class="facility-hero mb-5 shadow-sm">
+        <div class="facility-hero__image-wrapper">
+            <img class="facility-hero__image" src="@imageUrl" alt="@Model.Facility!.Name" loading="lazy" />
+        </div>
+        <div class="facility-hero__content">
+            <span class="badge bg-primary-subtle text-primary mb-3">Cơ sở thể thao</span>
+            <h2 class="h3 mb-3">@Model.Facility!.Name</h2>
+            <div class="d-flex flex-wrap gap-3 text-muted small">
+                @if (!string.IsNullOrWhiteSpace(Model.Facility.Address))
+                {
+                    <span><i class="fa-solid fa-location-dot me-2 text-danger"></i>@Model.Facility.Address</span>
+                }
+                <span><i class="fa-regular fa-clock me-2 text-primary"></i>@(Model.Facility.OpenTime?.ToString("HH\\:mm") ?? "--:--") - @(Model.Facility.CloseTime?.ToString("HH\\:mm") ?? "--:--")</span>
+                <span><i class="fa-solid fa-layer-group me-2 text-success"></i>@(Model.Facility.CategoryFields?.Count ?? 0) hạng mục</span>
+            </div>
+            @if (Model.Facility.CategoryFields?.Any(category => !string.IsNullOrWhiteSpace(category?.CategoryFieldName)) == true)
+            {
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    @foreach (var category in Model.Facility.CategoryFields.Where(category => !string.IsNullOrWhiteSpace(category?.CategoryFieldName)))
+                    {
+                        <span class="badge facility-card__category">@category!.CategoryFieldName</span>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Facility.Description) || !string.IsNullOrWhiteSpace(Model.Facility.Subdescription))
+    {
+        <section class="facility-overview mb-5">
+            <h2 class="h5 mb-3">Giới thiệu</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.Facility.Description))
+            {
+                <p class="mb-3">@Model.Facility.Description</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Facility.Subdescription))
+            {
+                <p class="text-muted mb-0">@Model.Facility.Subdescription</p>
+            }
+        </section>
+    }
+
+    <section class="mb-5">
+        <div class="section-heading d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="h5 mb-1">Danh sách sân</h2>
+                <p class="text-muted mb-0">Thông tin chi tiết các sân thuộc cơ sở.</p>
+            </div>
+        </div>
+
+        @if (!Model.Fields.Any())
+        {
+            <div class="empty-state text-center">
+                <i class="fa-solid fa-futbol fa-2x text-secondary mb-3"></i>
+                <p class="mb-0">Cơ sở chưa cập nhật danh sách sân.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var field in Model.Fields)
+                {
+                    <div class="col-12 col-lg-6">
+                        <article class="field-card h-100">
+                            <header class="mb-3">
+                                <h3 class="h6 mb-1">@field.FieldName</h3>
+                                <p class="text-muted small mb-0">
+                                    <i class="fa-solid fa-tag me-2 text-primary"></i>@(field.CategoryName ?? "Chưa cập nhật hạng mục")
+                                </p>
+                            </header>
+                            @if (!string.IsNullOrWhiteSpace(field.Description))
+                            {
+                                <p class="field-card__description mb-3">@field.Description</p>
+                            }
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge @(field.IsBookingEnable == true ? "badge-soft-success" : "badge-soft-warning")">
+                                    <i class="fa-solid @(field.IsBookingEnable == true ? "fa-check" : "fa-circle-minus") me-1"></i>
+                                    @(field.IsBookingEnable == true ? "Cho phép đặt sân" : "Tạm ngưng đặt sân")
+                                </span>
+                                @if (!string.IsNullOrWhiteSpace(field.FacilityAddress))
+                                {
+                                    <span class="badge badge-soft-primary"><i class="fa-solid fa-location-arrow me-1"></i>@field.FacilityAddress</span>
+                                }
+                            </div>
+                            @{ var pricing = Model.GetPricingForField(field.FieldId); }
+                            @if (pricing.Any())
+                            {
+                                <div class="field-card__pricing">
+                                    <h4 class="h6 text-muted text-uppercase mb-2">Bảng giá tham khảo</h4>
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach (var slot in pricing)
+                                        {
+                                            <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                                <span class="small text-muted"><i class="fa-regular fa-clock me-1"></i>@slot.StartTime.ToString("HH\\:mm") - @slot.EndTime.ToString("HH\\:mm")</span>
+                                                <span class="fw-semibold">@Model.FormatCurrency(slot.Price)</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-0">Chưa cập nhật bảng giá cho sân này.</p>
+                            }
+                        </article>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="mb-5">
+        <div class="section-heading d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="h5 mb-1">Dịch vụ đi kèm</h2>
+                <p class="text-muted mb-0">Các tiện ích hỗ trợ người chơi và chủ sân.</p>
+            </div>
+        </div>
+
+        @if (!Model.Services.Any())
+        {
+            <div class="empty-state text-center">
+                <i class="fa-solid fa-briefcase fa-2x text-secondary mb-3"></i>
+                <p class="mb-0">Cơ sở chưa cập nhật dịch vụ đi kèm.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var service in Model.Services)
+                {
+                    <div class="col-12 col-lg-4">
+                        <article class="service-card h-100">
+                            <header class="mb-3">
+                                <h3 class="h6 mb-1">@service.ServiceName</h3>
+                                <span class="badge badge-soft-success">@Model.FormatCurrency(service.Price)</span>
+                            </header>
+                            @if (!string.IsNullOrWhiteSpace(service.Description))
+                            {
+                                <p class="service-card__description mb-0">@service.Description</p>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-0">Dịch vụ chưa có mô tả chi tiết.</p>
+                            }
+                        </article>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
