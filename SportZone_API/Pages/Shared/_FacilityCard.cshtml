@@ -34,6 +34,19 @@
         .ToList();
     var remainingCategoryCount = Math.Max(0, categories.Count - featuredCategories.Count);
     var hasDescription = !string.IsNullOrWhiteSpace(Model.Description);
+    var request = Context?.Request;
+    var shareUrl = request?.Host.HasValue == true
+        ? Url.Page("/Facilities/Details", pageHandler: null, values: new { id = Model.FacId }, protocol: request!.Scheme, host: request.Host.Value)
+        : Url.Page("/Facilities/Details", pageHandler: null, values: new { id = Model.FacId });
+    shareUrl ??= Url.Page("/Facilities/Details", pageHandler: null, values: new { id = Model.FacId }) ?? string.Empty;
+    var shareTitle = !string.IsNullOrWhiteSpace(Model.Name) ? Model.Name : "Cơ sở thể thao SportZone";
+    var shareText = !string.IsNullOrWhiteSpace(Model.Address)
+        ? $"Khám phá {Model.Name ?? "cơ sở thể thao"} tại {Model.Address} trên SportZone."
+        : $"Khám phá {Model.Name ?? "cơ sở thể thao"} trên SportZone.";
+    var directionsQuerySource = !string.IsNullOrWhiteSpace(Model.Address) ? Model.Address : Model.Name;
+    directionsQuerySource = directionsQuerySource?.Trim();
+    var directionsQuery = string.IsNullOrWhiteSpace(directionsQuerySource) ? "SportZone" : directionsQuerySource!;
+    var directionsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(directionsQuery)}";
 }
 
 <article class="facility-card h-100">
@@ -77,11 +90,28 @@
             </div>
         }
 
-        <footer class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-            <span class="text-muted small"><i class="fa-solid fa-layer-group me-1"></i>@categories.Count hạng mục</span>
-            <a class="btn btn-sm btn-outline-primary" asp-page="/Facilities/Details" asp-route-id="@Model.FacId">
-                Xem chi tiết
-            </a>
+        <footer class="facility-card__footer mt-auto pt-3 border-top d-flex flex-column gap-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="text-muted small"><i class="fa-solid fa-layer-group me-1"></i>@categories.Count hạng mục</span>
+                <a class="btn btn-sm btn-outline-primary" asp-page="/Facilities/Details" asp-route-id="@Model.FacId">
+                    Xem chi tiết
+                </a>
+            </div>
+            <div class="facility-card__actions">
+                <a class="btn btn-sm btn-outline-success" href="@directionsUrl" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-map-location-dot me-1"></i>Chỉ đường
+                </a>
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary share-trigger"
+                        data-share-url="@shareUrl"
+                        data-share-title="@shareTitle"
+                        data-share-text="@shareText"
+                        data-share-success-label="Đã sao chép!"
+                        data-share-reset-label="Chia sẻ">
+                    <i class="fa-solid fa-share-nodes me-1"></i>
+                    <span class="share-trigger__label">Chia sẻ</span>
+                </button>
+            </div>
         </footer>
     </div>
 </article>

@@ -59,6 +59,32 @@ h1, h2, h3 {
     min-height: 1.25rem;
 }
 
+.facility-card__footer {
+    background-color: transparent;
+}
+
+.facility-card__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.facility-card__actions .btn {
+    flex: 1 1 48%;
+}
+
+.share-trigger {
+    position: relative;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.share-trigger[data-share-state="copied"],
+.share-trigger[data-share-state="shared"] {
+    background-color: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #047857;
+}
+
 .badge-soft-primary {
     color: #2563eb;
     background-color: rgba(37, 99, 235, 0.12);
@@ -158,6 +184,16 @@ h1, h2, h3 {
     justify-content: center;
 }
 
+.facility-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.facility-hero__actions .btn {
+    min-width: 180px;
+}
+
 .facility-overview {
     background: #fff;
     border-radius: 1.5rem;
@@ -200,6 +236,10 @@ h1, h2, h3 {
 
     .facility-hero__content {
         padding: 2rem;
+    }
+
+    .facility-card__actions .btn {
+        flex: 1 1 100%;
     }
 }
 

@@ -27,6 +27,19 @@
                     ? $"Mở lại {(schedule.NextChangeIsTomorrow ? "ngày mai " : string.Empty)}lúc {nextChange.Value:HH\\:mm}"
                     : "Thời gian mở cửa đang cập nhật"
         : "Giờ mở cửa sẽ được cập nhật sớm";
+    var request = Context?.Request;
+    var shareUrl = request?.Host.HasValue == true
+        ? Url.Page("/Facilities/Details", pageHandler: null, values: new { id = Model.Facility?.FacId ?? 0 }, protocol: request!.Scheme, host: request.Host.Value)
+        : Url.Page("/Facilities/Details", pageHandler: null, values: new { id = Model.Facility?.FacId ?? 0 });
+    shareUrl ??= Url.Page("/Facilities/Details", pageHandler: null, values: new { id = Model.Facility?.FacId ?? 0 }) ?? string.Empty;
+    var shareTitle = Model.Facility?.Name ?? "Cơ sở thể thao SportZone";
+    var shareText = !string.IsNullOrWhiteSpace(Model.Facility?.Address)
+        ? $"Khám phá {Model.Facility?.Name ?? "cơ sở thể thao"} tại {Model.Facility?.Address} trên SportZone."
+        : $"Khám phá {Model.Facility?.Name ?? "cơ sở thể thao"} trên SportZone.";
+    var directionsQuerySource = !string.IsNullOrWhiteSpace(Model.Facility?.Address) ? Model.Facility?.Address : Model.Facility?.Name;
+    directionsQuerySource = directionsQuerySource?.Trim();
+    var directionsQuery = string.IsNullOrWhiteSpace(directionsQuerySource) ? "SportZone" : directionsQuerySource!;
+    var directionsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(directionsQuery)}";
 }
 
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -73,6 +86,22 @@ else
                 <span class="text-muted small">Cập nhật lúc @Model.CurrentTimeDisplay</span>
             </div>
             <p class="text-muted small mb-0 mt-2">@statusMeta</p>
+            <div class="facility-hero__actions mt-4">
+                <a class="btn btn-primary" href="#fields"><i class="fa-solid fa-table-list me-2"></i>Xem danh sách sân</a>
+                <a class="btn btn-outline-success" href="@directionsUrl" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-map-location-dot me-2"></i>Chỉ đường
+                </a>
+                <button type="button"
+                        class="btn btn-outline-secondary share-trigger"
+                        data-share-url="@shareUrl"
+                        data-share-title="@shareTitle"
+                        data-share-text="@shareText"
+                        data-share-success-label="Đã sao chép!"
+                        data-share-reset-label="Chia sẻ cơ sở">
+                    <i class="fa-solid fa-share-nodes me-2"></i>
+                    <span class="share-trigger__label">Chia sẻ cơ sở</span>
+                </button>
+            </div>
             @if (Model.Facility.CategoryFields?.Any(category => !string.IsNullOrWhiteSpace(category?.CategoryFieldName)) == true)
             {
                 <div class="d-flex flex-wrap gap-2 mt-3">
@@ -100,7 +129,7 @@ else
         </section>
     }
 
-    <section class="mb-5">
+    <section id="fields" class="mb-5">
         <div class="section-heading d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
             <div>
                 <h2 class="h5 mb-1">Danh sách sân</h2>
@@ -169,7 +198,7 @@ else
         }
     </section>
 
-    <section class="mb-5">
+    <section id="services" class="mb-5">
         <div class="section-heading d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
             <div>
                 <h2 class="h5 mb-1">Dịch vụ đi kèm</h2>
