@@ -1,0 +1,163 @@
+@page "/service-manager"
+
+<PageTitle>Quản lý dịch vụ - SportZone</PageTitle>
+
+<div class="admin-page service-manager">
+    <div class="admin-header">
+        <div>
+            <h1>Quản lý dịch vụ</h1>
+            <p class="subtitle">Tạo và theo dõi các dịch vụ gia tăng giúp nâng cao trải nghiệm người chơi.</p>
+        </div>
+        <div class="service-manager__actions">
+            <button class="btn btn-primary" disabled title="Tính năng đang phát triển">+ Thêm dịch vụ</button>
+        </div>
+    </div>
+
+    <div class="service-toolbar">
+        <div class="service-search">
+            <div class="search-input-wrapper">
+                <input type="search"
+                       placeholder="Tìm theo tên, mô tả hoặc trạng thái"
+                       @bind="_searchTerm"
+                       @bind:event="oninput"
+                       class="search-input" />
+                @if (!string.IsNullOrWhiteSpace(_searchTerm))
+                {
+                    <button type="button" class="clear-search" title="Xóa" @onclick="ClearSearch">✕</button>
+                }
+            </div>
+        </div>
+        <div class="service-filters">
+            <label>
+                <span>Trạng thái</span>
+                <select @bind="_statusFilter">
+                    <option value="all">Tất cả</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Tạm dừng</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <div class="stats-grid service-manager__stats">
+        <div class="stat-card">
+            <span class="stat-label">Tổng dịch vụ</span>
+            <span class="stat-value">@_services.Count</span>
+            <span class="stat-change">Đang hiển thị @FilteredServices.Count() bản ghi</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Đang hoạt động</span>
+            <span class="stat-value">@_services.Count(s => s.IsActive)</span>
+            <span class="stat-change positive">@GetActivePercentage()% khả dụng</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Giá trung bình</span>
+            <span class="stat-value">@FormatCurrency(GetAveragePrice())</span>
+            <span class="stat-change">Theo toàn bộ danh mục</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Giá cao nhất</span>
+            <span class="stat-value">@FormatCurrency(GetHighestPrice())</span>
+            <span class="stat-change">Dịch vụ giá trị lớn</span>
+        </div>
+    </div>
+
+    <div class="service-table-wrapper">
+        @if (!FilteredServices.Any())
+        {
+            <div class="service-empty">
+                <p>Chưa có dịch vụ nào phù hợp với bộ lọc hiện tại.</p>
+            </div>
+        }
+        else
+        {
+            <table class="service-table">
+                <thead>
+                    <tr>
+                        <th>Tên dịch vụ</th>
+                        <th>Mô tả</th>
+                        <th class="text-right">Giá (₫)</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var service in FilteredServices)
+                    {
+                        <tr>
+                            <td>@service.Name</td>
+                            <td>@service.Description</td>
+                            <td class="text-right">@FormatCurrency(service.Price)</td>
+                            <td>
+                                <span class="status-badge @(service.IsActive ? "status-badge--success" : "status-badge--danger")">
+                                    @(service.IsActive ? "Đang hoạt động" : "Tạm dừng")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private readonly List<ServiceItem> _services =
+    [
+        new(1, "Dọn dẹp sân", "Vệ sinh sân sau mỗi ca", 200_000m, true),
+        new(2, "Thuê đèn chiếu sáng", "Bật hệ thống chiếu sáng buổi tối", 150_000m, true),
+        new(3, "Thuê trọng tài", "Trọng tài chuyên nghiệp cho trận đấu", 300_000m, false),
+        new(4, "Nước uống", "Combo nước uống mát lạnh", 80_000m, true)
+    ];
+
+    private string _searchTerm = string.Empty;
+    private string _statusFilter = "all";
+
+    private IEnumerable<ServiceItem> FilteredServices => _services
+        .Where(s => MatchesStatus(s) && MatchesSearch(s));
+
+    private void ClearSearch()
+    {
+        _searchTerm = string.Empty;
+    }
+
+    private bool MatchesStatus(ServiceItem service) => _statusFilter switch
+    {
+        "active" => service.IsActive,
+        "inactive" => !service.IsActive,
+        _ => true
+    };
+
+    private bool MatchesSearch(ServiceItem service)
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            return true;
+        }
+
+        var term = _searchTerm.Trim();
+        return service.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || service.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || (service.IsActive ? "đang hoạt động" : "tạm dừng").Contains(term, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private int GetActivePercentage()
+    {
+        if (_services.Count == 0)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round((double)_services.Count(s => s.IsActive) / _services.Count * 100);
+    }
+
+    private decimal GetAveragePrice()
+        => _services.Count == 0 ? 0m : _services.Average(s => s.Price);
+
+    private decimal GetHighestPrice()
+        => _services.Count == 0 ? 0m : _services.Max(s => s.Price);
+
+    private static string FormatCurrency(decimal amount)
+        => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}", amount);
+
+    private sealed record ServiceItem(int Id, string Name, string Description, decimal Price, bool IsActive);
+}

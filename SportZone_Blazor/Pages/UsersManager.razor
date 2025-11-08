@@ -1,0 +1,200 @@
+@page "/users-manager"
+
+<PageTitle>Quản lý người dùng - SportZone</PageTitle>
+
+<div class="admin-page users-manager">
+    <div class="admin-header">
+        <div>
+            <h1>Quản lý tài khoản</h1>
+            <p class="subtitle">Theo dõi trạng thái, phân quyền và hỗ trợ người dùng hệ thống.</p>
+        </div>
+        <div class="users-manager__actions">
+            <button class="btn btn-primary" disabled title="Tính năng đang phát triển">+ Tạo tài khoản</button>
+        </div>
+    </div>
+
+    <div class="users-toolbar">
+        <div class="search-input-wrapper">
+            <input type="search"
+                   placeholder="Tìm theo email, tên hoặc vai trò"
+                   @bind="_searchTerm"
+                   @bind:event="oninput"
+                   class="search-input" />
+            @if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                <button type="button" class="clear-search" @onclick="ClearSearch">✕</button>
+            }
+        </div>
+        <label class="filter-select">
+            <span>Phân quyền</span>
+            <select @bind="_roleFilter">
+                <option value="all">Tất cả</option>
+                <option value="admin">Admin</option>
+                <option value="owner">Chủ sân</option>
+                <option value="staff">Nhân viên</option>
+                <option value="customer">Khách hàng</option>
+            </select>
+        </label>
+        <label class="filter-select">
+            <span>Trạng thái</span>
+            <select @bind="_statusFilter">
+                <option value="all">Tất cả</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="locked">Đã khóa</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="stats-grid users-manager__stats">
+        <div class="stat-card">
+            <span class="stat-label">Tổng tài khoản</span>
+            <span class="stat-value">@_users.Count</span>
+            <span class="stat-change">Hiển thị @Filtered.Count() người dùng</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Đang hoạt động</span>
+            <span class="stat-value">@_users.Count(u => u.Status == UserStatus.Active)</span>
+            <span class="stat-change positive">@GetActivePercentage()% hoạt động</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Admin</span>
+            <span class="stat-value">@_users.Count(u => u.Role == UserRole.Admin)</span>
+            <span class="stat-change">Quản trị hệ thống</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Khách hàng</span>
+            <span class="stat-value">@_users.Count(u => u.Role == UserRole.Customer)</span>
+            <span class="stat-change">Người đặt sân tiềm năng</span>
+        </div>
+    </div>
+
+    <div class="users-table-wrapper">
+        @if (!Filtered.Any())
+        {
+            <div class="users-empty">Không tìm thấy người dùng phù hợp.</div>
+        }
+        else
+        {
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Người dùng</th>
+                        <th>Email</th>
+                        <th>Vai trò</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Filtered)
+                    {
+                        <tr>
+                            <td>
+                                <div class="user-info">
+                                    <div class="avatar">@user.Initials</div>
+                                    <div>
+                                        <span class="name">@user.DisplayName</span>
+                                        <span class="uid">ID: @user.Id</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@user.Email</td>
+                            <td><span class="role-chip">@GetRoleLabel(user.Role)</span></td>
+                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <span class="status-badge @(user.Status == UserStatus.Active ? "status-badge--success" : "status-badge--danger")">
+                                    @(user.Status == UserStatus.Active ? "Đang hoạt động" : "Đã khóa")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private readonly List<UserRecord> _users =
+    [
+        new(1201, "admin@sportzone.vn", UserRole.Admin, UserStatus.Active, DateOnly.FromDateTime(DateTime.Today.AddYears(-3)), "Admin SportZone"),
+        new(2205, "owner.q1@sportzone.vn", UserRole.Owner, UserStatus.Active, DateOnly.FromDateTime(DateTime.Today.AddYears(-2).AddMonths(-3)), "Nguyễn Văn Long"),
+        new(3320, "support@sportzone.vn", UserRole.Staff, UserStatus.Active, DateOnly.FromDateTime(DateTime.Today.AddMonths(-18)), "Team Hỗ trợ"),
+        new(4445, "customer.minhpham@gmail.com", UserRole.Customer, UserStatus.Active, DateOnly.FromDateTime(DateTime.Today.AddMonths(-2)), "Phạm Minh"),
+        new(5566, "field.staff@sportzone.vn", UserRole.Staff, UserStatus.Locked, DateOnly.FromDateTime(DateTime.Today.AddMonths(-12)), "Nhân viên sân Quận 7"),
+        new(6677, "owner.thuduc@sportzone.vn", UserRole.Owner, UserStatus.Active, DateOnly.FromDateTime(DateTime.Today.AddMonths(-10)), "Lê Thị Thu Hà")
+    ];
+
+    private string _searchTerm = string.Empty;
+    private string _roleFilter = "all";
+    private string _statusFilter = "all";
+
+    private IEnumerable<UserRecord> Filtered => _users
+        .Where(MatchesRole)
+        .Where(MatchesStatus)
+        .Where(MatchesSearch);
+
+    private void ClearSearch()
+    {
+        _searchTerm = string.Empty;
+    }
+
+    private bool MatchesRole(UserRecord user) => _roleFilter switch
+    {
+        "admin" => user.Role == UserRole.Admin,
+        "owner" => user.Role == UserRole.Owner,
+        "staff" => user.Role == UserRole.Staff,
+        "customer" => user.Role == UserRole.Customer,
+        _ => true
+    };
+
+    private bool MatchesStatus(UserRecord user) => _statusFilter switch
+    {
+        "active" => user.Status == UserStatus.Active,
+        "locked" => user.Status == UserStatus.Locked,
+        _ => true
+    };
+
+    private bool MatchesSearch(UserRecord user)
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            return true;
+        }
+
+        var term = _searchTerm.Trim();
+        return user.Email.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || user.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || user.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private int GetActivePercentage()
+        => _users.Count == 0 ? 0 : (int)Math.Round((double)_users.Count(u => u.Status == UserStatus.Active) / _users.Count * 100);
+
+    private static string GetRoleLabel(UserRole role) => role switch
+    {
+        UserRole.Admin => "Admin",
+        UserRole.Owner => "Chủ sân",
+        UserRole.Staff => "Nhân viên",
+        _ => "Khách hàng"
+    };
+
+    private enum UserRole
+    {
+        Admin,
+        Owner,
+        Staff,
+        Customer
+    }
+
+    private enum UserStatus
+    {
+        Active,
+        Locked
+    }
+
+    private sealed record UserRecord(int Id, string Email, UserRole Role, UserStatus Status, DateOnly CreatedAt, string DisplayName)
+    {
+        public string Initials => string.Join(string.Empty, DisplayName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(2).Select(part => part[0])).ToUpperInvariant();
+    }
+}

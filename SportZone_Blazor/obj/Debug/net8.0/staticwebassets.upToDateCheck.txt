@@ -1,0 +1,4 @@
+wwwroot\css\app.css
+wwwroot\index.html
+wwwroot\manifest.json
+wwwroot\appsettings.json

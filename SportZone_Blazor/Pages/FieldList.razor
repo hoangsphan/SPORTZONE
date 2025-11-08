@@ -1,0 +1,334 @@
+@page "/field-list"
+
+@using Microsoft.AspNetCore.WebUtilities
+@using SportZone_Blazor.Models
+@using SportZone_Blazor.Services
+@inject IFacilityService FacilityService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Tìm sân thể thao - SportZone</PageTitle>
+
+<!-- Header -->
+<AppHeader />
+
+<!-- Main Content -->
+<div class="field-list-page">
+    <!-- Page Header Section -->
+    <div class="field-list-header">
+        <div class="container">
+            <h1>Tìm sân thể thao</h1>
+            
+            <!-- Search and Filter Bar -->
+            <div class="search-filter-bar">
+                <form class="search-form" @onsubmit="OnSearchSubmitted" @onsubmit:preventDefault>
+                    <input @bind="_searchTerm" 
+                           @bind:event="oninput" 
+                           type="search" 
+                           placeholder="Tìm kiếm theo tên, địa điểm..." 
+                           class="search-input" />
+                    <button type="submit" class="search-button">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                    </button>
+                </form>
+
+                <div class="filter-section">
+                    <select class="filter-select" value="@_selectedCategory" @onchange="OnFilterChanged">
+                        <option value="all">Tất cả loại sân</option>
+                        @foreach (var category in _availableCategories)
+                        {
+                            <option value="@category">@category</option>
+                        }
+                    </select>
+
+                    <div class="view-toggle">
+                        <button type="button" 
+                                class="view-btn @(_isGridView ? "active" : "")" 
+                                @onclick="(() => SetViewMode(true))"
+                                title="Lưới">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                            </svg>
+                        </button>
+                        <button type="button" 
+                                class="view-btn @(!_isGridView ? "active" : "")" 
+                                @onclick="(() => SetViewMode(false))"
+                                title="Danh sách">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"/>
+                                <line x1="8" y1="12" x2="21" y2="12"/>
+                                <line x1="8" y1="18" x2="21" y2="18"/>
+                                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                                <line x1="3" y1="18" x2="3.01" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="field-list-content">
+        <div class="container">
+            @if (_loading)
+            {
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Đang tải danh sách sân...</p>
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(_error))
+            {
+                <div class="error-state">
+                    <p>@_error</p>
+                    <button class="btn btn-primary" @onclick="Reload">Thử lại</button>
+                </div>
+            }
+            else if (_filteredFacilities.Count == 0)
+            {
+                <div class="empty-state">
+                    <h2>Không tìm thấy sân</h2>
+                    <p>Vui lòng thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.</p>
+                </div>
+            }
+            else
+            {
+                <div class="results-summary">
+                    <p>@(_loading ? "Đang tải..." : $"Tìm thấy {_filteredFacilities.Count} sân phù hợp")</p>
+                </div>
+
+                <div class="@(_isGridView ? "fields-grid" : "fields-list")">
+                    @foreach (var facility in _pagedFacilities)
+                    {
+                        <FieldCard Field="facility" BookClicked="OnBookClicked" />
+                    }
+                </div>
+
+                @if (_totalPages > 1)
+                {
+                    <nav class="pagination">
+                        <button class="pagination-btn" 
+                                @onclick="(() => ChangePage(_currentPage - 1))" 
+                                disabled="@(_currentPage == 1)">
+                            &#60;
+                        </button>
+
+                        @foreach (var page in _paginationSequence)
+                        {
+                            if (page == 0)
+                            {
+                                <span class="pagination-ellipsis">...</span>
+                            }
+                            else
+                            {
+                                <button class="pagination-btn @(page == _currentPage ? "active" : "")" 
+                                        @onclick="(() => ChangePage(page))"> 
+                                    @(page)
+                                </button> 
+                            }
+                        }
+
+                        <button class="pagination-btn" 
+                                @onclick="(() => ChangePage(_currentPage + 1))" 
+                                disabled="@(_currentPage == _totalPages)">
+                            &#62;
+                        </button>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly List<FacilitySummaryModel> _facilities = new();
+    private List<FacilitySummaryModel> _filteredFacilities = new();
+    private IEnumerable<FacilitySummaryModel> _pagedFacilities => _filteredFacilities.Skip((_currentPage - 1) * PageSize).Take(PageSize);
+
+    private HashSet<string> _availableCategories = new(StringComparer.OrdinalIgnoreCase);
+
+    private const int PageSize = 9;
+    private int _currentPage = 1;
+    private int _totalPages = 1;
+    private bool _isGridView = true;
+    private bool _loading = true;
+    private string? _error;
+
+    private string _searchTerm = string.Empty;
+    private string _selectedCategory = "all";
+
+    private IReadOnlyList<int> _paginationSequence => BuildPaginationSequence();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("search", out var searchValue))
+        {
+            _searchTerm = searchValue.ToString();
+        }
+
+        await LoadFacilitiesAsync();
+    }
+
+    private async Task LoadFacilitiesAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var facilities = await FacilityService.GetFacilitiesAsync(_searchTerm);
+            _facilities.Clear();
+            _facilities.AddRange(facilities);
+
+            _availableCategories = _facilities
+                .SelectMany(f => f.CategoryFields)
+                .Select(c => c.CategoryFieldName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            _error = "Failed to load fields: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var query = _facilities.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            var term = _searchTerm.Trim().ToLowerInvariant();
+            query = query.Where(f =>
+                f.Name.ToLowerInvariant().Contains(term) ||
+                (f.Address?.ToLowerInvariant().Contains(term) ?? false) ||
+                (f.Description?.ToLowerInvariant().Contains(term) ?? false) ||
+                (f.Subdescription?.ToLowerInvariant().Contains(term) ?? false) ||
+                f.CategoryFields.Any(c => c.CategoryFieldName.ToLowerInvariant().Contains(term))
+            );
+        }
+
+        if (!string.Equals(_selectedCategory, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(f => f.CategoryFields.Any(c => string.Equals(c.CategoryFieldName, _selectedCategory, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        _filteredFacilities = query.ToList();
+        _totalPages = Math.Max(1, (int)Math.Ceiling((double)_filteredFacilities.Count / PageSize));
+        _currentPage = Math.Min(_currentPage, _totalPages);
+    }
+
+    private void SetViewMode(bool grid)
+    {
+        _isGridView = grid;
+    }
+
+    private async Task OnSearchSubmitted()
+    {
+        _currentPage = 1;
+        UpdateQueryString();
+        await LoadFacilitiesAsync();
+    }
+
+    private Task OnFilterChanged(ChangeEventArgs _)
+    {
+        _currentPage = 1;
+        ApplyFilters();
+        return Task.CompletedTask;
+    }
+
+    private void ChangePage(int newPage)
+    {
+        if (newPage < 1 || newPage > _totalPages)
+        {
+            return;
+        }
+
+        _currentPage = newPage;
+    }
+
+    private void UpdateQueryString()
+    {
+        var uri = "field-list";
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "search", _searchTerm);
+        }
+
+        NavigationManager.NavigateTo(uri, replace: true);
+    }
+
+    private void SetSearchTerm(string search)
+    {
+        _searchTerm = search;
+    }
+
+    private IReadOnlyList<int> BuildPaginationSequence()
+    {
+        var results = new List<int>();
+
+        if (_totalPages <= 7)
+        {
+            for (var page = 1; page <= _totalPages; page++)
+            {
+                results.Add(page);
+            }
+            return results;
+        }
+
+        results.Add(1);
+
+        if (_currentPage > 4)
+        {
+            results.Add(0); // ellipsis
+        }
+
+        var start = Math.Max(2, _currentPage - 1);
+        var end = Math.Min(_totalPages - 1, _currentPage + 1);
+
+        for (var page = start; page <= end; page++)
+        {
+            results.Add(page);
+        }
+
+        if (_currentPage < _totalPages - 3)
+        {
+            results.Add(0);
+        }
+
+        results.Add(_totalPages);
+        return results;
+    }
+
+    private async Task Reload()
+    {
+        await LoadFacilitiesAsync();
+    }
+
+    private void OnBookClicked(FacilitySummaryModel facility)
+    {
+        if (facility is null)
+        {
+            return;
+        }
+
+        NavigationManager.NavigateTo($"/booking/{facility.FacilityId}");
+    }
+}

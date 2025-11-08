@@ -1,0 +1,131 @@
+@page "/regulation-manager"
+
+<PageTitle>Quản lý quy định - SportZone</PageTitle>
+
+<div class="admin-page regulation-manager">
+    <div class="admin-header">
+        <div>
+            <h1>Quy định & chính sách</h1>
+            <p class="subtitle">Cập nhật quy định áp dụng cho cơ sở và thông báo đến đội ngũ vận hành.</p>
+        </div>
+        <div class="regulation-actions">
+            <button class="btn btn-primary" disabled title="Tính năng đang phát triển">+ Thêm quy định</button>
+        </div>
+    </div>
+
+    <div class="regulation-toolbar">
+        <div class="search-input-wrapper">
+            <input type="search"
+                   placeholder="Tìm theo tiêu đề, phạm vi áp dụng hoặc trạng thái"
+                   @bind="_searchTerm"
+                   @bind:event="oninput"
+                   class="search-input" />
+            @if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                <button type="button" class="clear-search" @onclick="ClearSearch">✕</button>
+            }
+        </div>
+        <label class="filter-select">
+            <span>Trạng thái</span>
+            <select @bind="_statusFilter">
+                <option value="all">Tất cả</option>
+                <option value="active">Đang hiệu lực</option>
+                <option value="draft">Nháp</option>
+                <option value="archived">Ngừng áp dụng</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="regulation-list">
+        @foreach (var regulation in FilteredRegulations)
+        {
+            <article class="regulation-card">
+                <header>
+                    <div>
+                        <h2>@regulation.Title</h2>
+                        <span class="regulation-meta">Áp dụng: @regulation.Scope</span>
+                    </div>
+                    <span class="status-badge @GetStatusClass(regulation.Status)">@GetStatusLabel(regulation.Status)</span>
+                </header>
+                <p>@regulation.Description</p>
+                <footer>
+                    <span>Cập nhật: @regulation.UpdatedAt.ToString("dd/MM/yyyy")</span>
+                    <button class="btn-light" disabled>Chi tiết</button>
+                </footer>
+            </article>
+        }
+
+        @if (!FilteredRegulations.Any())
+        {
+            <div class="regulation-empty">Chưa có quy định nào trùng khớp với bộ lọc hiện tại.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private readonly List<Regulation> _regulations =
+    [
+        new("Quy trình vệ sinh sân", "Áp dụng cho toàn bộ cơ sở", RegulationStatus.Active, DateOnly.FromDateTime(DateTime.Today.AddDays(-5)), "Vệ sinh sân trước và sau mỗi khung giờ, kiểm tra đèn chiếu sáng và hệ thống thoát nước."),
+        new("Chính sách hoàn tiền", "Khách hàng đặt sân", RegulationStatus.Draft, DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), "Hoàn tiền 100% nếu huỷ trước 24h, 50% nếu huỷ trong vòng 12h. Không hoàn tiền khi huỷ dưới 6h."),
+        new("Quy định an toàn", "Nhân viên vận hành", RegulationStatus.Active, DateOnly.FromDateTime(DateTime.Today.AddDays(-20)), "Kiểm tra thiết bị phòng cháy, bố trí lối thoát hiểm và chuẩn bị bộ sơ cứu tại mỗi cơ sở."),
+        new("Mức phạt trễ giờ", "Khách hàng & nhân viên", RegulationStatus.Archived, DateOnly.FromDateTime(DateTime.Today.AddMonths(-3)), "Phạt 10% giá trị đơn nếu khách đến trễ quá 15 phút. Nhân viên phải báo cáo ngay khi khách không đến." )
+    ];
+
+    private string _searchTerm = string.Empty;
+    private string _statusFilter = "all";
+
+    private IEnumerable<Regulation> FilteredRegulations => _regulations
+        .Where(MatchesStatus)
+        .Where(MatchesSearch);
+
+    private void ClearSearch()
+    {
+        _searchTerm = string.Empty;
+    }
+
+    private bool MatchesStatus(Regulation regulation) => _statusFilter switch
+    {
+        "active" => regulation.Status == RegulationStatus.Active,
+        "draft" => regulation.Status == RegulationStatus.Draft,
+        "archived" => regulation.Status == RegulationStatus.Archived,
+        _ => true
+    };
+
+    private bool MatchesSearch(Regulation regulation)
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            return true;
+        }
+
+        var term = _searchTerm.Trim();
+        return regulation.Title.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || regulation.Scope.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || regulation.Description.Contains(term, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetStatusClass(RegulationStatus status) => status switch
+    {
+        RegulationStatus.Active => "status-badge--success",
+        RegulationStatus.Draft => "status-badge--warning",
+        RegulationStatus.Archived => "status-badge--muted",
+        _ => ""
+    };
+
+    private static string GetStatusLabel(RegulationStatus status) => status switch
+    {
+        RegulationStatus.Active => "Đang hiệu lực",
+        RegulationStatus.Draft => "Bản nháp",
+        RegulationStatus.Archived => "Ngừng áp dụng",
+        _ => status.ToString()
+    };
+
+    private sealed record Regulation(string Title, string Scope, RegulationStatus Status, DateOnly UpdatedAt, string Description);
+
+    private enum RegulationStatus
+    {
+        Active,
+        Draft,
+        Archived
+    }
+}

@@ -1,0 +1,285 @@
+@page "/facility-manager"
+
+@using SportZone_Blazor.Models
+@using System.Globalization
+@using SportZone_Blazor.Services
+@inject IFacilityService FacilityService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Quản lý cơ sở - SportZone</PageTitle>
+
+<div class="admin-page facility-manager">
+    <div class="admin-header">
+        <div>
+            <h1>Quản lý cơ sở</h1>
+            <p class="subtitle">Theo dõi, tối ưu và giữ vận hành các cơ sở của bạn trong trạng thái tốt nhất.</p>
+        </div>
+        <div class="facility-manager__actions">
+            <button class="btn btn-primary" disabled title="Tính năng đang được phát triển">
+                + Thêm cơ sở
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-grid facility-manager__stats">
+        <div class="stat-card">
+            <span class="stat-label">Tổng số cơ sở</span>
+            <span class="stat-value">@_facilities.Count</span>
+            <span class="stat-change">Hiển thị @_filteredFacilities.Count cơ sở</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Đang mở cửa</span>
+            <span class="stat-value">@_facilities.Count(f => IsCurrentlyOpen(f))</span>
+            <span class="stat-change positive">@((_facilities.Count == 0 ? 0 : (int)Math.Round((double)_facilities.Count(f => IsCurrentlyOpen(f)) / Math.Max(_facilities.Count, 1) * 100)))% hoạt động</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Danh mục sân</span>
+            <span class="stat-value">@_facilities.SelectMany(f => f.CategoryFields).Select(c => c.CategoryFieldId).Distinct().Count()</span>
+            <span class="stat-change">Đa dạng dịch vụ</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Cập nhật gần nhất</span>
+            <span class="stat-value">@_lastRefreshLabel</span>
+            <span class="stat-change">Theo giờ hệ thống</span>
+        </div>
+    </div>
+
+    <div class="facility-manager__toolbar">
+        <form class="facility-manager__search" @onsubmit="PerformSearchAsync" @onsubmit:preventDefault>
+            <div class="search-input-wrapper">
+                <input @bind="_searchTerm"
+                       @bind:event="oninput"
+                       class="search-input"
+                       type="search"
+                       placeholder="Tìm kiếm theo tên, địa chỉ hoặc mô tả" />
+                @if (!string.IsNullOrWhiteSpace(_searchTerm))
+                {
+                    <button type="button" class="clear-search" @onclick="ClearSearch" title="Xóa từ khóa">
+                        ✕
+                    </button>
+                }
+            </div>
+            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+        </form>
+
+        <label class="toggle-only-open">
+            <input type="checkbox" @bind="_showOnlyOpen" @bind:after="ApplyFilters" />
+            <span>Chỉ hiển thị đang mở</span>
+        </label>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="state-card state-card--inline">
+            <div class="spinner"></div>
+            <p>Đang tải danh sách cơ sở...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="state-card state-card--error">
+            <h2>Không thể tải dữ liệu</h2>
+            <p>@_error</p>
+            <button class="btn btn-primary" @onclick="RefreshAsync">Thử lại</button>
+        </div>
+    }
+    else if (_filteredFacilities.Count == 0)
+    {
+        <div class="state-card state-card--inline">
+            <h2>Chưa có cơ sở phù hợp</h2>
+            <p>Hãy thử thay đổi bộ lọc hoặc thêm cơ sở mới khi tính năng sẵn sàng.</p>
+        </div>
+    }
+    else
+    {
+        <div class="facility-grid">
+            @foreach (var facility in _filteredFacilities)
+            {
+                <article class="facility-card">
+                    <div class="facility-card__image">
+                        <img src="@GetPrimaryImage(facility)" alt="Ảnh cơ sở @facility.Name" loading="lazy" />
+                        <span class="facility-card__status @(IsCurrentlyOpen(facility) ? "facility-card__status--open" : "facility-card__status--closed")">
+                            @(IsCurrentlyOpen(facility) ? "Đang mở" : "Đóng cửa")
+                        </span>
+                    </div>
+                    <div class="facility-card__body">
+                        <div class="facility-card__header">
+                            <h3>@facility.Name</h3>
+                            <button class="facility-card__link" @onclick="() => NavigateToFacility(facility.FacilityId)">Xem chi tiết</button>
+                        </div>
+                        <p class="facility-card__address">@facility.Address</p>
+
+                        <div class="facility-card__meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Giờ hoạt động</span>
+                                <span class="meta-value">@GetOperatingHours(facility)</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Danh mục sân</span>
+                                <span class="meta-value">@facility.CategoryFields.Count</span>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(facility.Description))
+                        {
+                            <p class="facility-card__description">@facility.Description</p>
+                        }
+
+                        @if (facility.CategoryFields.Count > 0)
+                        {
+                            <div class="facility-card__tags">
+                                @foreach (var category in facility.CategoryFields.Take(6))
+                                {
+                                    <span class="facility-tag">@category.CategoryFieldName</span>
+                                }
+                                @if (facility.CategoryFields.Count > 6)
+                                {
+                                    <span class="facility-tag facility-tag--more">+@((facility.CategoryFields.Count - 6))</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private readonly List<FacilitySummaryModel> _facilities = new();
+    private readonly List<FacilitySummaryModel> _filteredFacilities = new();
+    private string _searchTerm = string.Empty;
+    private bool _showOnlyOpen;
+    private bool _loading = true;
+    private string? _error;
+    private string _lastRefreshLabel = "Chưa cập nhật";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAsync();
+    }
+
+    private async Task PerformSearchAsync()
+    {
+        await RefreshAsync();
+    }
+
+    private async Task RefreshAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var facilities = await FacilityService.GetFacilitiesAsync(string.IsNullOrWhiteSpace(_searchTerm) ? null : _searchTerm);
+
+            _facilities.Clear();
+            _facilities.AddRange(facilities.OrderBy(f => f.Name));
+
+            _lastRefreshLabel = DateTime.Now.ToString("HH:mm:ss");
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearSearch()
+    {
+        _searchTerm = string.Empty;
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<FacilitySummaryModel> query = _facilities;
+
+        if (_showOnlyOpen)
+        {
+            query = query.Where(IsCurrentlyOpen);
+        }
+
+        var result = query.ToList();
+
+        _filteredFacilities.Clear();
+        _filteredFacilities.AddRange(result);
+        StateHasChanged();
+    }
+
+    private bool IsCurrentlyOpen(FacilitySummaryModel facility)
+    {
+        if (!TryParseTime(facility.OpenTime, out var open) || !TryParseTime(facility.CloseTime, out var close))
+        {
+            return false;
+        }
+
+        var now = TimeOnly.FromDateTime(DateTime.Now);
+        if (open <= close)
+        {
+            return now >= open && now <= close;
+        }
+
+        // qua đêm
+        return now >= open || now <= close;
+    }
+
+    private static bool TryParseTime(string? input, out TimeOnly time)
+    {
+        if (!string.IsNullOrWhiteSpace(input))
+        {
+            if (TimeOnly.TryParse(input, out time))
+            {
+                return true;
+            }
+
+            if (TimeOnly.TryParseExact(input, "HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out time))
+            {
+                return true;
+            }
+        }
+
+        time = default;
+        return false;
+    }
+
+    private static string GetOperatingHours(FacilitySummaryModel facility)
+    {
+        var open = TryFormatTime(facility.OpenTime);
+        var close = TryFormatTime(facility.CloseTime);
+        return string.IsNullOrEmpty(open) || string.IsNullOrEmpty(close) ? "Đang cập nhật" : $"{open} - {close}";
+    }
+
+    private static string TryFormatTime(string? input)
+    {
+        if (TryParseTime(input, out var time))
+        {
+            return time.ToString("HH:mm");
+        }
+        return string.Empty;
+    }
+
+    private static string GetPrimaryImage(FacilitySummaryModel facility)
+    {
+        var imageUrl = facility.ImageUrls.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(imageUrl))
+        {
+            return "https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?auto=format&fit=crop&w=900&q=60";
+        }
+
+        return imageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+            ? imageUrl
+            : $"https://localhost:7057{(imageUrl.StartsWith('/') ? imageUrl : "/" + imageUrl)}";
+    }
+
+    private void NavigateToFacility(int facilityId)
+    {
+        NavigationManager.NavigateTo($"/facility/{facilityId}");
+    }
+}

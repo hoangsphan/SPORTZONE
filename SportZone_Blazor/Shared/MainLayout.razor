@@ -1,0 +1,38 @@
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+@code {
+    private bool IsPublicPage => 
+        NavigationManager.Uri.Contains("/login") || 
+        NavigationManager.ToBaseRelativePath(NavigationManager.Uri) == "" ||
+        NavigationManager.ToBaseRelativePath(NavigationManager.Uri) == "/" ||
+        NavigationManager.Uri.Contains("/field-list") ||
+        NavigationManager.Uri.Contains("/booking/") ||
+        NavigationManager.Uri.Contains("/payment") ||
+        NavigationManager.Uri.Contains("/facility/");
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += (s, e) => StateHasChanged();
+    }
+}
+
+@if (IsPublicPage)
+{
+    <!-- Public page layout without sidebar -->
+    <div class="page-layout">
+        @Body
+    </div>
+}
+else
+{
+    <!-- Admin page layout with sidebar -->
+    <div class="app-shell">
+        <Sidebar />
+        <main class="app-content">
+            <div class="main-content">
+                @Body
+            </div>
+        </main>
+    </div>
+}

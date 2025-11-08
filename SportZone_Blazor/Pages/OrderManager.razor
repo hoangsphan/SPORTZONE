@@ -1,0 +1,251 @@
+@page "/order-manager"
+@using SportZone_Blazor.Models
+@using SportZone_Blazor.Services
+
+@inject IOrderService OrderService
+
+<PageTitle>Quản lý đơn hàng - SportZone</PageTitle>
+
+<div class="admin-page order-manager">
+    <div class="admin-header">
+        <div>
+            <h1>Quản lý đơn hàng</h1>
+            <p class="subtitle">Tìm kiếm và theo dõi trạng thái thanh toán, dịch vụ đính kèm cho từng đơn hàng.</p>
+        </div>
+    </div>
+
+    <section class="order-search">
+        <form class="order-search__form" @onsubmit="FetchOrder" @onsubmit:preventDefault>
+            <div class="order-search__field">
+                <label for="order-id">Mã đơn hàng</label>
+                <div class="order-search__input-group">
+                    <input id="order-id"
+                           type="number"
+                           min="1"
+                           placeholder="Nhập mã đơn (ví dụ: 1024)"
+                           @bind="_orderId"
+                           required />
+                    @if (_orderId > 0)
+                    {
+                        <button type="button" class="order-search__clear" title="Xóa" @onclick="ClearOrderId">✕</button>
+                    }
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" disabled="_loading">
+                @_loading ? "Đang tải..." : "Tra cứu"
+            </button>
+        </form>
+        <p class="order-search__hint">Nhập mã đơn hàng để xem chi tiết thanh toán, thông tin khách và dịch vụ đã chọn.</p>
+    </section>
+
+    @if (_error is not null)
+    {
+        <div class="state-card state-card--error">
+            <h2>Không thể tải đơn hàng</h2>
+            <p>@_error</p>
+        </div>
+    }
+
+    @if (_order is not null)
+    {
+        <div class="stats-grid order-manager__stats">
+            <div class="stat-card">
+                <span class="stat-label">Tổng tiền</span>
+                <span class="stat-value">@FormatCurrency(_order.TotalPrice)</span>
+                <span class="stat-change">Đã bao gồm dịch vụ</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Dịch vụ đính kèm</span>
+                <span class="stat-value">@_order.Services.Count</span>
+                <span class="stat-change">Tổng dịch vụ: @FormatCurrency(_order.TotalServicePrice)</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Trạng thái</span>
+                <span class="stat-value">@GetStatusLabel(_order.StatusPayment)</span>
+                <span class="stat-change @(GetStatusBadgeClass(_order.StatusPayment).Contains("success") ? "positive" : "")">
+                    Cập nhật: @FormatDate(_order.CreatedAt)
+                </span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Đặt chỗ</span>
+                <span class="stat-value">@(_order.BookingId?.ToString() ?? "N/A")</span>
+                <span class="stat-change">Cơ sở: @_order.FacilityId</span>
+            </div>
+        </div>
+
+        <div class="order-detail-grid">
+            <section class="order-card order-card--summary">
+                <div class="order-card__header">
+                    <h2>Đơn hàng #@_order.OrderId</h2>
+                    <span class="status-badge @GetStatusBadgeClass(_order.StatusPayment)">
+                        @GetStatusLabel(_order.StatusPayment)
+                    </span>
+                </div>
+
+                <div class="order-card__body">
+                    <div class="info-line">
+                        <span class="info-label">Khách hàng</span>
+                        <span class="info-value">@(_order.GuestName ?? "Khách vãng lai")</span>
+                    </div>
+                    <div class="info-line">
+                        <span class="info-label">Số điện thoại</span>
+                        <span class="info-value">@(_order.GuestPhone ?? "Không có")</span>
+                    </div>
+                    <div class="info-line">
+                        <span class="info-label">Tổng tiền</span>
+                        <span class="info-value">@FormatCurrency(_order.TotalPrice)</span>
+                    </div>
+                    <div class="info-line">
+                        <span class="info-label">Ghi chú thanh toán</span>
+                        <span class="info-value info-value--wrap">@(_order.ContentPayment ?? "Không có ghi chú")</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="order-card order-card--meta">
+                <h3>Thông tin đặt sân</h3>
+                <div class="meta-grid">
+                    <div>
+                        <span class="meta-label">Mã đơn</span>
+                        <span class="meta-value">@_order.OrderId</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Ngày tạo</span>
+                        <span class="meta-value">@FormatDateTime(_order.CreatedAt)</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Mã booking</span>
+                        <span class="meta-value">@(_order.BookingId?.ToString() ?? "Không có")</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Cơ sở</span>
+                        <span class="meta-value">@_order.FacilityId</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="services-card">
+            <div class="services-card__header">
+                <h3>Dịch vụ đi kèm</h3>
+                <span class="services-count">@_order.Services.Count dịch vụ</span>
+            </div>
+
+            @if (_order.Services.Count == 0)
+            {
+                <div class="services-empty">Không có dịch vụ nào được thêm vào đơn hàng này.</div>
+            }
+            else
+            {
+                <div class="services-table-wrapper">
+                    <table class="services-table">
+                        <thead>
+                            <tr>
+                                <th>Tên dịch vụ</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var service in _order.Services)
+                            {
+                                var quantity = service.Quantity ?? 0;
+                                var price = service.Price ?? 0m;
+                                <tr>
+                                    <td>
+                                        <div class="service-name">
+                                            <span>@(service.ServiceName ?? $"Dịch vụ #{service.ServiceId}")</span>
+                                            @if (!string.IsNullOrWhiteSpace(service.ImageUrl))
+                                            {
+                                                <span class="service-badge">Có hình ảnh</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>@quantity</td>
+                                    <td>@FormatCurrency(price)</td>
+                                    <td>@FormatCurrency(price * quantity)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private int _orderId;
+    private OrderModel? _order;
+    private bool _loading;
+    private string? _error;
+
+    private async Task FetchOrder()
+    {
+        if (_orderId <= 0)
+        {
+            _error = "Enter a valid order id.";
+            return;
+        }
+
+        _loading = true;
+        _error = null;
+        _order = null;
+
+        try
+        {
+            var order = await OrderService.GetOrderAsync(_orderId);
+            if (order is null)
+            {
+                _error = "Order not found.";
+            }
+            else
+            {
+                _order = order;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load order: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ClearOrderId()
+    {
+        _orderId = 0;
+        _order = null;
+        _error = null;
+    }
+
+    private static string FormatCurrency(decimal? value)
+        => value.HasValue ? string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}₫", value.Value) : "-";
+
+    private static string FormatDate(DateTime? date)
+        => date?.ToLocalTime().ToString("dd/MM/yyyy") ?? "Chưa xác định";
+
+    private static string FormatDateTime(DateTime? date)
+        => date?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật";
+
+    private static string GetStatusLabel(string? status)
+        => status?.ToLowerInvariant() switch
+        {
+            "paid" => "Đã thanh toán",
+            "pending" => "Chờ thanh toán",
+            "cancelled" => "Đã huỷ",
+            _ => string.IsNullOrWhiteSpace(status) ? "Không xác định" : status
+        };
+
+    private static string GetStatusBadgeClass(string? status)
+        => status?.ToLowerInvariant() switch
+        {
+            "paid" => "status-badge--success",
+            "pending" => "status-badge--warning",
+            "cancelled" => "status-badge--danger",
+            _ => "status-badge--muted"
+        };
+}

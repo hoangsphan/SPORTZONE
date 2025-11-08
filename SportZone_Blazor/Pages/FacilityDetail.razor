@@ -1,0 +1,13 @@
+@page "/facility/{FacilityId:int}"
+
+<PageTitle>Facility Detail</PageTitle>
+
+@code {
+    [Parameter]
+    public int FacilityId { get; set; }
+}
+
+<section class="page-shell">
+    <h1>Facility @FacilityId</h1>
+    <p>Detailed facility overview will be available soon.</p>
+</section>

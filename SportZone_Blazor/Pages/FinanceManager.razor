@@ -1,0 +1,288 @@
+@page "/finance-manager"
+@using SportZone_Blazor.Services
+
+@inject IOrderService OrderService
+
+<PageTitle>Quản lý doanh thu - SportZone</PageTitle>
+
+<div class="admin-page finance-manager">
+    <div class="admin-header">
+        <div>
+            <h1>Thống kê doanh thu</h1>
+            <p class="subtitle">Theo dõi dòng tiền theo chủ sở hữu, cơ sở và giai đoạn thời gian để tối ưu vận hành.</p>
+        </div>
+        <div class="finance-manager__actions">
+            <button class="btn btn-primary" disabled title="Tính năng đang phát triển">Xuất báo cáo</button>
+        </div>
+    </div>
+
+    <section class="finance-filter-card">
+        <form class="finance-filter-form" @onsubmit="FetchRevenue" @onsubmit:preventDefault>
+            <div class="filter-input">
+                <label for="owner-id">Mã chủ sở hữu</label>
+                <input id="owner-id" type="number" min="1" placeholder="Ví dụ: 12" @bind="_ownerId" required />
+            </div>
+            <div class="filter-input">
+                <label for="facility-id">Mã cơ sở</label>
+                <input id="facility-id" type="number" min="1" placeholder="Bỏ trống để xem toàn bộ" @bind="_facilityId" />
+            </div>
+            <div class="filter-input">
+                <label for="start-date">Từ ngày</label>
+                <input id="start-date" type="date" value="@_startDate" @onchange="OnStartDateChanged" />
+            </div>
+            <div class="filter-input">
+                <label for="end-date">Đến ngày</label>
+                <input id="end-date" type="date" value="@_endDate" @onchange="OnEndDateChanged" />
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary" disabled="_loading">@(_loading ? "Đang tải..." : "Cập nhật")</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetFilters" disabled="_loading">Xoá lọc</button>
+            </div>
+        </form>
+        <p class="filter-hint">Vui lòng nhập mã chủ sở hữu (owner) để xem doanh thu. Có thể tuỳ chọn lọc thêm theo cơ sở hoặc thời gian.</p>
+    </section>
+
+    @if (_loading)
+    {
+        <div class="state-card state-card--inline">
+            <div class="spinner"></div>
+            <p>Đang tổng hợp dữ liệu doanh thu...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="state-card state-card--error">
+            <h2>Không thể tải dữ liệu</h2>
+            <p>@_error</p>
+        </div>
+    }
+    else if (_revenue is null)
+    {
+        <div class="state-card state-card--inline">
+            <h2>Chưa có dữ liệu</h2>
+            <p>Vui lòng nhập mã chủ sở hữu và nhấn "Cập nhật" để xem thông tin doanh thu.</p>
+        </div>
+    }
+    else
+    {
+        <div class="stats-grid finance-manager__stats">
+            <div class="stat-card">
+                <span class="stat-label">Tổng doanh thu</span>
+                <span class="stat-value">@FormatCurrency(_revenue.TotalRevenue)</span>
+                <span class="stat-change">Tính đến @FormatDate(_revenue.EndDate)</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Số cơ sở</span>
+                <span class="stat-value">@GetFacilityCount(_revenue)</span>
+                <span class="stat-change">Trung bình: @FormatCurrency(GetAverageRevenuePerFacility(_revenue)) / cơ sở</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Khoảng thời gian</span>
+                <span class="stat-value">@FormatRange(_revenue.StartDate, _revenue.EndDate)</span>
+                <span class="stat-change">@GetDurationLabel(_revenue.StartDate, _revenue.EndDate)</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Doanh thu cao nhất</span>
+                <span class="stat-value">@FormatCurrency(GetTopFacilityRevenue(_revenue))</span>
+                <span class="stat-change">Cơ sở dẫn đầu</span>
+            </div>
+        </div>
+
+        <div class="finance-layout">
+            <section class="finance-panel">
+                <h2>Doanh thu theo tháng</h2>
+                @if (_revenue.MonthlyRevenue is null || _revenue.MonthlyRevenue.Count == 0)
+                {
+                    <div class="finance-empty">Chưa có dữ liệu tháng cho bộ lọc này.</div>
+                }
+                else
+                {
+                    <table class="finance-table">
+                        <thead>
+                            <tr>
+                                <th>Tháng</th>
+                                <th>Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in _revenue.MonthlyRevenue.OrderBy(kvp => kvp.Key))
+                            {
+                                <tr>
+                                    <td>@entry.Key</td>
+                                    <td>@FormatCurrency(entry.Value)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </section>
+
+            <section class="finance-panel">
+                <h2>Doanh thu theo cơ sở</h2>
+                @if (_revenue.Facilities is null || _revenue.Facilities.Count == 0)
+                {
+                    <div class="finance-empty">Chưa ghi nhận doanh thu cho cơ sở nào.</div>
+                }
+                else
+                {
+                    <table class="finance-table facilities-table">
+                        <thead>
+                            <tr>
+                                <th>Cơ sở</th>
+                                <th class="text-right">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var facility in _revenue.Facilities.OrderByDescending(f => f.TotalRevenue))
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="facility-name">
+                                            <span>@(facility.FacilityName ?? $"Cơ sở #{facility.FacilityId}")</span>
+                                            <span class="facility-id">ID: @facility.FacilityId</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-right">@FormatCurrency(facility.TotalRevenue)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </section>
+        </div>
+    }
+</div>
+
+@code {
+    private int _ownerId;
+    private int? _facilityId;
+    private string? _startDate;
+    private string? _endDate;
+
+    private OwnerRevenueModel? _revenue;
+    private bool _loading;
+    private string? _error;
+
+    private async Task FetchRevenue()
+    {
+        if (_ownerId <= 0)
+        {
+            _error = "Owner id is required.";
+            return;
+        }
+
+        _loading = true;
+        _error = null;
+        _revenue = null;
+
+        try
+        {
+            DateTime? start = ParseDate(_startDate);
+            DateTime? end = ParseDate(_endDate);
+
+            var result = await OrderService.GetOwnerRevenueAsync(_ownerId, start, end, _facilityId);
+            if (result is null)
+            {
+                _error = "No revenue data found.";
+            }
+            else
+            {
+                _revenue = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load revenue: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static DateTime? ParseDate(string? value)
+    {
+        if (DateTime.TryParse(value, out var date))
+        {
+            return date;
+        }
+        return null;
+    }
+
+    private void OnStartDateChanged(ChangeEventArgs args) => _startDate = args.Value?.ToString();
+
+    private void OnEndDateChanged(ChangeEventArgs args) => _endDate = args.Value?.ToString();
+
+    private void ResetFilters()
+    {
+        _facilityId = null;
+        _startDate = null;
+        _endDate = null;
+        _revenue = null;
+        _error = null;
+    }
+
+    private static string FormatDate(DateTime? value) => value?.ToString("dd/MM/yyyy") ?? "--";
+
+    private static string FormatRange(DateTime? start, DateTime? end)
+    {
+        if (start is null && end is null)
+        {
+            return "Toàn thời gian";
+        }
+
+        return $"{FormatDate(start)} → {FormatDate(end)}";
+    }
+
+    private static string GetDurationLabel(DateTime? start, DateTime? end)
+    {
+        if (start is null || end is null)
+        {
+            return "Khoảng thời gian linh hoạt";
+        }
+
+        var totalDays = (end.Value.Date - start.Value.Date).TotalDays + 1;
+        if (totalDays <= 1)
+        {
+            return "1 ngày";
+        }
+
+        if (totalDays < 31)
+        {
+            return $"{totalDays:#,0} ngày";
+        }
+
+        var months = totalDays / 30.4375;
+        return months >= 12 ? $"~{months / 12:0.#} năm" : $"~{months:0.#} tháng";
+    }
+
+    private static string FormatCurrency(decimal value)
+        => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}₫", value);
+
+    private static string FormatCurrency(decimal? value)
+        => value.HasValue ? FormatCurrency(value.Value) : "-";
+
+    private static int GetFacilityCount(OwnerRevenueModel revenue)
+        => revenue.Facilities?.Count ?? 0;
+
+    private static decimal GetAverageRevenuePerFacility(OwnerRevenueModel revenue)
+    {
+        var facilityCount = GetFacilityCount(revenue);
+        if (facilityCount == 0 || revenue.TotalRevenue <= 0)
+        {
+            return 0m;
+        }
+
+        return revenue.TotalRevenue / facilityCount;
+    }
+
+    private static decimal GetTopFacilityRevenue(OwnerRevenueModel revenue)
+    {
+        if (revenue.Facilities is null || revenue.Facilities.Count == 0)
+        {
+            return 0m;
+        }
+
+        return revenue.Facilities.Max(f => f.TotalRevenue);
+    }
+}

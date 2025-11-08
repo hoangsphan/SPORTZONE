@@ -1,0 +1,222 @@
+@page "/payment"
+
+<PageTitle>Thanh toán - SportZone</PageTitle>
+
+<div class="payment-page">
+    <div class="payment-header">
+        <div>
+            <h1>Thanh toán đặt sân</h1>
+            <p>Kiểm tra lại thông tin đặt sân và hoàn tất thanh toán an toàn.</p>
+        </div>
+        <span class="payment-chip">Bước 3/3</span>
+    </div>
+
+    <div class="payment-layout">
+        <section class="booking-summary">
+            <h2>Tóm tắt đặt sân</h2>
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span class="summary-label">Sân</span>
+                    <span class="summary-value">@_summary.FieldName</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Địa điểm</span>
+                    <span class="summary-value">@_summary.Location</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Ngày</span>
+                    <span class="summary-value">@_summary.Date.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Khung giờ</span>
+                    <span class="summary-value">@_summary.TimeRange</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Thời lượng</span>
+                    <span class="summary-value">@_summary.Duration</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Tổng tiền sân</span>
+                    <span class="summary-value">@FormatCurrency(_summary.FieldTotal)</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Dịch vụ đi kèm</span>
+                    <span class="summary-value">@FormatCurrency(_summary.ServiceTotal)</span>
+                </div>
+                <div class="summary-total">
+                    <span>Tổng thanh toán</span>
+                    <strong>@FormatCurrency(_summary.TotalAmount)</strong>
+                </div>
+            </div>
+
+            <section class="help-card">
+                <h3>Hỗ trợ nhanh</h3>
+                <p>Nếu gặp khó khăn khi thanh toán, hãy liên hệ hotline <strong>1900 6868</strong> hoặc chat với chúng tôi.</p>
+            </section>
+        </section>
+
+        <section class="payment-form">
+            <h2>Phương thức thanh toán</h2>
+
+            <div class="payment-methods">
+                @foreach (var method in _methods)
+                {
+                    <button type="button"
+                            class="method-card @(method.Code == _form.PaymentMethod ? "active" : string.Empty)"
+                            @onclick="() => SelectMethod(method.Code)">
+                        <span class="method-icon">@method.Icon</span>
+                        <span class="method-info">
+                            <strong>@method.Title</strong>
+                            <small>@method.Description</small>
+                        </span>
+                    </button>
+                }
+            </div>
+
+            <EditForm Model="_form" OnValidSubmit="SubmitPayment">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-grid">
+                    <label>
+                        <span>Họ và tên *</span>
+                        <InputText @bind-Value="_form.CustomerName" required />
+                    </label>
+                    <label>
+                        <span>Số điện thoại *</span>
+                        <InputText @bind-Value="_form.Phone" required />
+                    </label>
+                    <label>
+                        <span>Email</span>
+                        <InputText @bind-Value="_form.Email" type="email" />
+                    </label>
+                    @if (_form.PaymentMethod == "credit")
+                    {
+                        <label>
+                            <span>Số thẻ</span>
+                            <InputText @bind-Value="_form.CardNumber" maxlength="19" placeholder="1111 2222 3333 4444" />
+                        </label>
+                        <label>
+                            <span>Họ tên chủ thẻ</span>
+                            <InputText @bind-Value="_form.CardHolder" />
+                        </label>
+                        <label>
+                            <span>Ngày hết hạn</span>
+                            <InputText @bind-Value="_form.Expiry" placeholder="MM/YY" maxlength="5" />
+                        </label>
+                        <label>
+                            <span>CVV</span>
+                            <InputText @bind-Value="_form.Cvv" maxlength="4" />
+                        </label>
+                    }
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" disabled="_processing">
+                        @_processing ? "Đang xử lý..." : "Thanh toán"
+                    </button>
+                    <p class="secure-note">Thanh toán được bảo vệ bởi SportZone. Chúng tôi không lưu trữ thông tin thẻ của bạn.</p>
+                </div>
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(_message))
+            {
+                <div class="payment-message">@_message</div>
+            }
+        </section>
+    </div>
+</div>
+
+@code {
+    private readonly BookingSummary _summary = new()
+    {
+        FieldName = "Sân bóng mini A1",
+        Location = "Khu thể thao Trung tâm TDTT Quận 1, TP.HCM",
+        Date = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
+        TimeRange = "18:00 - 20:00",
+        Duration = "120 phút",
+        FieldTotal = 450_000m,
+        ServiceTotal = 80_000m
+    };
+
+    private readonly List<PaymentMethod> _methods =
+    [
+        new("credit", "💳", "Thẻ tín dụng/ghi nợ", "Thanh toán bằng thẻ Visa, MasterCard, JCB"),
+        new("momo", "📱", "Ví MoMo", "Quét mã QR hoặc xác nhận trong ứng dụng MoMo"),
+        new("banking", "🏦", "Chuyển khoản ngân hàng", "Chuyển khoản trực tiếp qua ngân hàng nội địa")
+    ];
+
+    private PaymentForm _form = new()
+    {
+        CustomerName = "",
+        Phone = "",
+        Email = "",
+        PaymentMethod = "credit"
+    };
+
+    private bool _processing;
+    private string? _message;
+
+    private decimal TotalAmount => _summary.TotalAmount;
+
+    private IEnumerable<ServiceItem> FilteredServices => Array.Empty<ServiceItem>();
+
+    private void SelectMethod(string method)
+    {
+        if (_form.PaymentMethod != method)
+        {
+            _form.PaymentMethod = method;
+            _message = null;
+        }
+    }
+
+    private async Task SubmitPayment()
+    {
+        _processing = true;
+        _message = null;
+
+        try
+        {
+            await Task.Delay(1200);
+            _message = $"Thanh toán thành công {FormatCurrency(TotalAmount)} bằng phương thức {GetMethodTitle(_form.PaymentMethod)}.";
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private string GetMethodTitle(string code)
+        => _methods.FirstOrDefault(m => m.Code == code)?.Title ?? code;
+
+    private static string FormatCurrency(decimal amount)
+        => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}₫", amount);
+
+    private sealed record BookingSummary
+    {
+        public string FieldName { get; init; } = string.Empty;
+        public string Location { get; init; } = string.Empty;
+        public DateOnly Date { get; init; }
+        public string TimeRange { get; init; } = string.Empty;
+        public string Duration { get; init; } = string.Empty;
+        public decimal FieldTotal { get; init; }
+        public decimal ServiceTotal { get; init; }
+        public decimal TotalAmount => FieldTotal + ServiceTotal;
+    }
+
+    private sealed record PaymentMethod(string Code, string Icon, string Title, string Description);
+
+    private sealed class PaymentForm
+    {
+        public string CustomerName { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = "credit";
+        public string CardNumber { get; set; } = string.Empty;
+        public string CardHolder { get; set; } = string.Empty;
+        public string Expiry { get; set; } = string.Empty;
+        public string Cvv { get; set; } = string.Empty;
+    }
+
+    private sealed record ServiceItem(string Name, decimal Price);
+}

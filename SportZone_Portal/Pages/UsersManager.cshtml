@@ -1,0 +1,88 @@
+@page
+@model SportZone_API.Pages.UsersManagerModel
+@{
+    ViewData["Title"] = "Users Manager";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <p>
+        <a asp-page="CreateUser" class="btn btn-primary">Create New</a>
+    </p>
+
+    <form>
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" name="searchTerm" class="form-control" placeholder="Search by email or name" value="@Request.Query["searchTerm"]" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <hr />
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Role
+                </th>
+                <th>
+                    Status
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.UserList != null)
+            {
+                @foreach (var item in Model.UserList)
+                {
+                    <tr>
+                        <td>
+                            @item.UEmail
+                        </td>
+                        <td>
+                            @if (item.Admin != null)
+                            {
+                                @item.Admin.Name
+                            }
+                            else if (item.Customer != null)
+                            {
+                                @item.Customer.Name
+                            }
+                            else if (item.FieldOwner != null)
+                            {
+                                @item.FieldOwner.Name
+                            }
+                            else if (item.Staff != null)
+                            {
+                                @item.Staff.Name
+                            }
+                        </td>
+                        <td>
+                            @item.Role.Name
+                        </td>
+                        <td>
+                            @item.UStatus
+                        </td>
+                        <td>
+                            <a asp-page="./EditUser" asp-route-id="@item.UId">Edit</a> |
+                            <a asp-page="./UserDetails" asp-route-id="@item.UId">Details</a> |
+                            <a asp-page="./DeleteUser" asp-route-id="@item.UId">Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

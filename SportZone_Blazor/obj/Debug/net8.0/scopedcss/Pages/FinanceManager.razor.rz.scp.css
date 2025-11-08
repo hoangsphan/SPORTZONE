@@ -1,0 +1,202 @@
+.finance-manager[b-j0kjfgpv6w] {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    padding: 2rem;
+}
+
+.finance-manager__actions[b-j0kjfgpv6w] {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.finance-filter-card[b-j0kjfgpv6w] {
+    background-color: var(--color-white);
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 20px 52px -38px rgba(15, 23, 42, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.finance-filter-form[b-j0kjfgpv6w] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-input[b-j0kjfgpv6w] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-input label[b-j0kjfgpv6w] {
+    font-weight: 600;
+    color: var(--color-text-dark);
+}
+
+.filter-input input[b-j0kjfgpv6w] {
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--color-gray-300);
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-input input:focus[b-j0kjfgpv6w] {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(30, 189, 111, 0.15);
+}
+
+.filter-actions[b-j0kjfgpv6w] {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.btn-secondary[b-j0kjfgpv6w] {
+    border: 1px solid var(--color-gray-300);
+    background-color: #f9fafb;
+    color: var(--color-text-dark);
+}
+
+.btn-secondary:hover[b-j0kjfgpv6w] {
+    background-color: #f3f4f6;
+}
+
+.filter-hint[b-j0kjfgpv6w] {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-gray);
+}
+
+.finance-manager__stats[b-j0kjfgpv6w] {
+    gap: 1.25rem;
+}
+
+.finance-layout[b-j0kjfgpv6w] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.finance-panel[b-j0kjfgpv6w] {
+    background-color: var(--color-white);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 52px -40px rgba(15, 23, 42, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.finance-panel h2[b-j0kjfgpv6w] {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+}
+
+.finance-empty[b-j0kjfgpv6w] {
+    background-color: #f9fafb;
+    border-radius: 12px;
+    padding: 1.25rem;
+    color: var(--color-text-gray);
+    text-align: center;
+}
+
+.finance-table[b-j0kjfgpv6w] {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 260px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.finance-table th[b-j0kjfgpv6w],
+.finance-table td[b-j0kjfgpv6w] {
+    text-align: left;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.finance-table th[b-j0kjfgpv6w] {
+    background-color: #f3f4f6;
+    font-weight: 700;
+}
+
+.facilities-table .facility-name[b-j0kjfgpv6w] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.facilities-table .facility-id[b-j0kjfgpv6w] {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.text-right[b-j0kjfgpv6w] {
+    text-align: right;
+}
+
+.state-card[b-j0kjfgpv6w] {
+    background-color: var(--color-white);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 22px 60px -45px rgba(15, 23, 42, 0.35);
+    text-align: center;
+}
+
+.state-card--inline[b-j0kjfgpv6w] {
+    padding: 2.25rem 1.5rem;
+}
+
+.state-card--error[b-j0kjfgpv6w] {
+    border: 1px solid #fecaca;
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+.state-card h2[b-j0kjfgpv6w] {
+    margin: 0 0 0.5rem;
+    color: var(--color-text-dark);
+}
+
+.state-card p[b-j0kjfgpv6w] {
+    margin: 0;
+    color: var(--color-text-gray);
+}
+
+@media (max-width: 1024px) {
+    .finance-manager[b-j0kjfgpv6w] {
+        padding: 1.5rem;
+    }
+
+    .finance-filter-form[b-j0kjfgpv6w] {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .finance-manager[b-j0kjfgpv6w] {
+        padding: 1.25rem;
+    }
+
+    .filter-actions[b-j0kjfgpv6w] {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .finance-table[b-j0kjfgpv6w] {
+        min-width: 220px;
+    }
+
+    .facilities-table[b-j0kjfgpv6w] {
+        overflow-x: auto;
+    }
+}

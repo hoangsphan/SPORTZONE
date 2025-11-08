@@ -1,0 +1,272 @@
+@page "/field-manager"
+
+@using SportZone_Blazor.Models
+@using SportZone_Blazor.Services
+@inject IFieldService FieldService
+@inject IFacilityService FacilityService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Quản lý sân - SportZone</PageTitle>
+
+<div class="admin-page field-manager">
+    <div class="admin-header">
+        <div>
+            <h1>Quản lý sân</h1>
+            <p class="subtitle">Kiểm soát hiện trạng sân, trạng thái đặt chỗ và thông tin theo từng cơ sở.</p>
+        </div>
+        <div class="field-manager__actions">
+            <button class="btn btn-primary" disabled title="Tính năng đang được phát triển">+ Thêm sân</button>
+        </div>
+    </div>
+
+    <div class="stats-grid field-manager__stats">
+        <div class="stat-card">
+            <span class="stat-label">Tổng số sân</span>
+            <span class="stat-value">@_fields.Count</span>
+            <span class="stat-change">Hiển thị @_filteredFields.Count sân</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Đang cho phép đặt</span>
+            <span class="stat-value">@_fields.Count(f => f.IsBookingEnable == true)</span>
+            <span class="stat-change positive">@((_fields.Count == 0 ? 0 : (int)Math.Round((double)_fields.Count(f => f.IsBookingEnable == true) / Math.Max(_fields.Count, 1) * 100)))% khả dụng</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Cơ sở</span>
+            <span class="stat-value">@_facilityLookup.Count</span>
+            <span class="stat-change">Phân bổ sân theo cơ sở</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Danh mục sân</span>
+            <span class="stat-value">@_fields.Select(f => f.CategoryName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).Count()</span>
+            <span class="stat-change">Chi tiết phân loại</span>
+        </div>
+    </div>
+
+    <div class="field-manager__toolbar">
+        <form class="field-manager__search" @onsubmit="OnSearchSubmitted" @onsubmit:preventDefault>
+            <div class="search-input-wrapper">
+                <input @bind="_searchTerm"
+                       @bind:event="oninput"
+                       type="search"
+                       placeholder="Tìm kiếm theo tên sân, cơ sở hoặc danh mục"
+                       class="search-input" />
+                @if (!string.IsNullOrWhiteSpace(_searchTerm))
+                {
+                    <button type="button" class="clear-search" title="Xóa từ khóa" @onclick="ClearSearch">✕</button>
+                }
+            </div>
+            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+        </form>
+
+        <div class="field-manager__filters">
+            <select @bind="_selectedFacilityFilter" @bind:after="ApplyFilters">
+                <option value="all">Tất cả cơ sở</option>
+                @foreach (var facility in _facilityLookup.Values.OrderBy(f => f.Name))
+                {
+                    <option value="@facility.FacilityId">@facility.Name</option>
+                }
+            </select>
+
+            <label class="toggle-only-bookable">
+                <input type="checkbox" @bind="_showOnlyBookable" @bind:after="ApplyFilters" />
+                <span>Chỉ sân cho phép đặt</span>
+            </label>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="state-card state-card--inline">
+            <div class="spinner"></div>
+            <p>Đang tải danh sách sân...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="state-card state-card--error">
+            <h2>Không thể tải dữ liệu</h2>
+            <p>@_error</p>
+            <button class="btn btn-primary" @onclick="ReloadAsync">Thử lại</button>
+        </div>
+    }
+    else if (_filteredFields.Count == 0)
+    {
+        <div class="state-card state-card--inline">
+            <h2>Chưa có sân phù hợp</h2>
+            <p>Điều chỉnh bộ lọc hoặc thêm sân mới khi tính năng sẵn sàng.</p>
+        </div>
+    }
+    else
+    {
+        <div class="field-table-wrapper">
+            <table class="field-table">
+                <thead>
+                    <tr>
+                        <th>Tên sân</th>
+                        <th>Cơ sở</th>
+                        <th>Danh mục</th>
+                        <th>Địa chỉ</th>
+                        <th>Trạng thái</th>
+                        <th class="text-right">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var field in _filteredFields)
+                    {
+                        <tr>
+                            <td>
+                                <div class="field-name">
+                                    <span class="name">@(!string.IsNullOrWhiteSpace(field.FieldName) ? field.FieldName : $"Sân #{field.FieldId}")</span>
+                                    @if (!string.IsNullOrWhiteSpace(field.Description))
+                                    {
+                                        <span class="description">@field.Description</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>@GetFacilityName(field.FacId)</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(field.CategoryName))
+                                {
+                                    <span class="category-chip">@field.CategoryName</span>
+                                }
+                                else
+                                {
+                                    <span class="empty-value">Chưa phân loại</span>
+                                }
+                            </td>
+                            <td class="muted">@field.FacilityAddress</td>
+                            <td>
+                                <span class="status-badge @(field.IsBookingEnable == true ? "status-badge--active" : "status-badge--inactive")">
+                                    @(field.IsBookingEnable == true ? "Cho phép đặt" : "Tạm tắt")
+                                </span>
+                            </td>
+                            <td class="text-right">
+                                @if (field.FacId is int facilityId)
+                                {
+                                    <button class="btn-light" @onclick="() => NavigateToBooking(facilityId)">Xem lịch</button>
+                                }
+                                else
+                                {
+                                    <span class="empty-value">Không khả dụng</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly List<FieldSummaryModel> _fields = new();
+    private readonly List<FieldSummaryModel> _filteredFields = new();
+    private readonly Dictionary<int, FacilitySummaryModel> _facilityLookup = new();
+    private string _searchTerm = string.Empty;
+    private string _selectedFacilityFilter = "all";
+    private bool _showOnlyBookable;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var facilities = await FacilityService.GetFacilitiesAsync();
+            _facilityLookup.Clear();
+            foreach (var facility in facilities)
+            {
+                _facilityLookup[facility.FacilityId] = facility;
+            }
+
+            var fields = await FieldService.GetFieldsAsync();
+            _fields.Clear();
+            _fields.AddRange(fields);
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearchSubmitted()
+    {
+        // tìm kiếm cục bộ đã đủ; chỉ cần làm mới bộ lọc
+        ApplyFilters();
+        await Task.CompletedTask;
+    }
+
+    private void ClearSearch()
+    {
+        _searchTerm = string.Empty;
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<FieldSummaryModel> query = _fields;
+
+        if (!string.Equals(_selectedFacilityFilter, "all", StringComparison.OrdinalIgnoreCase) && int.TryParse(_selectedFacilityFilter, out var facilityId))
+        {
+            query = query.Where(field => field.FacId == facilityId);
+        }
+
+        if (_showOnlyBookable)
+        {
+            query = query.Where(field => field.IsBookingEnable == true);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            query = query.Where(field => MatchesSearch(field, _searchTerm));
+        }
+
+        _filteredFields.Clear();
+        _filteredFields.AddRange(query.OrderBy(field => field.FieldName).ThenBy(field => field.FieldId));
+        StateHasChanged();
+    }
+
+    private bool MatchesSearch(FieldSummaryModel field, string search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return true;
+        }
+
+        var comparison = StringComparison.OrdinalIgnoreCase;
+        return (!string.IsNullOrWhiteSpace(field.FieldName) && field.FieldName.Contains(search, comparison))
+            || (!string.IsNullOrWhiteSpace(field.Description) && field.Description.Contains(search, comparison))
+            || (!string.IsNullOrWhiteSpace(field.CategoryName) && field.CategoryName.Contains(search, comparison))
+            || (field.FacId is int facilityId && _facilityLookup.TryGetValue(facilityId, out var facility) && facility.Name.Contains(search, comparison));
+    }
+
+    private string GetFacilityName(int? facilityId)
+    {
+        if (facilityId is int id && _facilityLookup.TryGetValue(id, out var facility))
+        {
+            return facility.Name;
+        }
+
+        return "Không xác định";
+    }
+
+    private void NavigateToBooking(int facilityId)
+    {
+        NavigationManager.NavigateTo($"/booking/{facilityId}");
+    }
+}

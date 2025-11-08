@@ -1,0 +1,549 @@
+@page "/booking/{FacilityId:int}"
+
+@inject IFacilityService FacilityService
+@inject IFieldService FieldService
+@inject IBookingService BookingService
+@using System.ComponentModel.DataAnnotations
+@using SportZone_Blazor.Services
+
+<PageTitle>Đặt lịch sân - SportZone</PageTitle>
+
+<AppHeader />
+
+<div class="booking-page">
+    @if (_loading)
+    {
+        <div class="state-card">
+            <div class="spinner"></div>
+            <p>Đang chuẩn bị dữ liệu đặt sân...</p>
+        </div>
+    }
+    else if (_facility is null)
+    {
+        <div class="state-card state-card--error">
+            <h1>Không tìm thấy cơ sở</h1>
+            <p>Cơ sở yêu cầu hiện không khả dụng. Vui lòng quay lại danh sách sân.</p>
+        </div>
+    }
+    else
+    {
+        <div class="booking-container">
+            <div class="booking-header">
+                <div>
+                    <h1>Đặt lịch sân</h1>
+                    <p>Chọn sân, khoảng thời gian và hoàn tất đặt sân chỉ trong vài bước.</p>
+                </div>
+                <div class="booking-metrics">
+                    <div class="metric-chip">
+                        <span class="metric-value">@_fields.Count</span>
+                        <span class="metric-label">Sân khả dụng</span>
+                    </div>
+                    <div class="metric-chip">
+                        <span class="metric-value">@_selectedSlotIds.Count</span>
+                        <span class="metric-label">Slot đã chọn</span>
+                    </div>
+                    <div class="metric-chip">
+                        <span class="metric-value">@GetTotalPrice().ToString("N0")</span>
+                        <span class="metric-label">VNĐ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="booking-grid">
+                <div class="booking-main">
+                    <section class="facility-card">
+                        <div class="facility-card__header">
+                            <div class="facility-card__avatar">
+                                <span>@GetFacilityInitials()</span>
+                            </div>
+                            <div>
+                                <h2>@_facility.Name</h2>
+                                <p class="facility-card__address">
+                                    @_facility.Address
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="facility-card__body">
+                            <div class="facility-meta">
+                                <div class="facility-meta__item">
+                                    <span class="facility-meta__label">Giờ mở cửa</span>
+                                    <span class="facility-meta__value">@FormatTime(_facility.OpenTime) - @FormatTime(_facility.CloseTime)</span>
+                                </div>
+                                <div class="facility-meta__item">
+                                    <span class="facility-meta__label">Mô tả</span>
+                                    <span class="facility-meta__value">@(_facility.Description ?? "Đang cập nhật")</span>
+                                </div>
+                            </div>
+
+                            @if (_facility.CategoryFields.Any())
+                            {
+                                <div class="facility-tags">
+                                    @foreach (var category in _facility.CategoryFields)
+                                    {
+                                        <span class="facility-tag">@category.CategoryFieldName</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    <section class="booking-filters">
+                        <div class="filter-item">
+                            <label for="field-select">Chọn sân</label>
+                            <select id="field-select" value="@_selectedFieldId" @onchange="OnFieldChanged">
+                                @foreach (var field in _fields)
+                                {
+                                    <option value="@field.FieldId">@field.FieldName ?? $"Sân {field.FieldId}"</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <label for="date-select">Chọn ngày</label>
+                            <input id="date-select"
+                                   type="date"
+                                   value="@_selectedDate.ToString("yyyy-MM-dd")"
+                                   min="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
+                                   @onchange="OnDateChanged" />
+                        </div>
+
+                        <div class="filter-summary">
+                            <div class="summary-item">
+                                <span class="summary-label">Slot đã chọn</span>
+                                <span class="summary-value">@_selectedSlotIds.Count</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Tổng tiền</span>
+                                <span class="summary-value">@GetTotalPrice().ToString("N0") VNĐ</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="slots-card">
+                        <div class="slots-card__header">
+                            <div>
+                                <h3>Lịch sân</h3>
+                                <p>Chọn một hoặc nhiều khung giờ phù hợp. Những khung giờ đã đặt sẽ không thể chọn.</p>
+                            </div>
+                            <div class="slots-legend">
+                                <span class="legend-chip legend-chip--available">Còn trống</span>
+                                <span class="legend-chip legend-chip--selected">Đang chọn</span>
+                                <span class="legend-chip legend-chip--booked">Đã đặt</span>
+                                <span class="legend-chip legend-chip--blocked">Khóa</span>
+                            </div>
+                        </div>
+
+                        @if (_scheduleLoading)
+                        {
+                            <div class="state-card state-card--inline">
+                                <div class="spinner"></div>
+                                <p>Đang tải lịch sân...</p>
+                            </div>
+                        }
+                        else if (_availableSlots.Count == 0)
+                        {
+                            <div class="state-card state-card--inline">
+                                <h2>Chưa có lịch trống</h2>
+                                <p>Vui lòng chọn ngày khác hoặc một sân khác để tiếp tục.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="slots-table-wrapper">
+                                <table class="slots-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Giờ bắt đầu</th>
+                                            <th>Giờ kết thúc</th>
+                                            <th>Giá (VNĐ)</th>
+                                            <th>Trạng thái</th>
+                                            <th class="text-center">Chọn</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var slot in _availableSlots)
+                                        {
+                                            var isSelected = _selectedSlotIds.Contains(slot.ScheduleId);
+                                            var status = slot.Status ?? "Available";
+                                            <tr class="@(isSelected ? "slot-row--selected" : string.Empty)">
+                                                <td>@slot.StartTime?.ToString("HH:mm")</td>
+                                                <td>@slot.EndTime?.ToString("HH:mm")</td>
+                                                <td>@(slot.Price?.ToString("N0") ?? "-")</td>
+                                                <td>
+                                                    <span class="slot-status @GetStatusBadgeClass(status)">@GetStatusLabel(status)</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <input type="checkbox"
+                                                           checked="@isSelected"
+                                                           @onchange="(_ => ToggleSlot(slot))"
+                                                           disabled="@(!IsSlotSelectable(slot))" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </section>
+
+                    @if (!string.IsNullOrEmpty(_alert))
+                    {
+                        <div class="alert-banner">@_alert</div>
+                    }
+                </div>
+
+                <EditForm Model="_form" OnValidSubmit="SubmitBooking">
+                    <DataAnnotationsValidator />
+                    <div class="booking-sidebar">
+                        <section class="contact-card">
+                            <h3>Thông tin liên hệ</h3>
+                            <p>Chúng tôi sẽ sử dụng thông tin này để liên hệ xác nhận lịch với bạn.</p>
+
+                            <ValidationSummary class="validation-summary" />
+
+                            <div class="contact-form">
+                                <label>
+                                    <span>Họ tên *</span>
+                                    <InputText @bind-Value="_form.GuestName" required class="contact-input" placeholder="Nhập họ tên" />
+                                </label>
+                                <label>
+                                    <span>Số điện thoại *</span>
+                                    <InputText @bind-Value="_form.GuestPhone" required class="contact-input" placeholder="Nhập 10 số (VD: 0901234567)" />
+                                </label>
+                                <label class="contact-full">
+                                    <span>Ghi chú</span>
+                                    <InputTextArea @bind-Value="_form.Notes" rows="3" class="contact-input" placeholder="Ghi chú thêm (tùy chọn)" />
+                                </label>
+                            </div>
+                        </section>
+
+                        <section class="summary-card">
+                            <h3>Tóm tắt đặt sân</h3>
+
+                            @if (_selectedSlotIds.Any())
+                            {
+                                <div class="summary-grid">
+                                    <div class="summary-row">
+                                        <span class="summary-key">Sân</span>
+                                        <span class="summary-value">@GetSelectedFieldName()</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span class="summary-key">Ngày</span>
+                                        <span class="summary-value">@_selectedDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span class="summary-key">Thời gian</span>
+                                        <span class="summary-value">@GetSelectedTimeRange()</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span class="summary-key">Thời lượng</span>
+                                        <span class="summary-value">@GetSelectedDuration()</span>
+                                    </div>
+                                    <div class="summary-total">
+                                        <span>Tổng tiền</span>
+                                        <strong>@GetTotalPrice().ToString("N0") VNĐ</strong>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="summary-placeholder">Vui lòng chọn ít nhất một khung giờ để xem tóm tắt.</p>
+                            }
+
+                            <button type="submit"
+                                    class="btn-confirm"
+                                    disabled="_booking || !_selectedSlotIds.Any()">
+                                @_booking ? "Đang xử lý..." : "Xác nhận đặt sân"
+                            </button>
+                        </section>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int FacilityId { get; set; }
+
+    private FacilityDetailModel? _facility;
+    private readonly List<FieldSummaryModel> _fields = new();
+    private readonly List<FieldScheduleModel> _selectedSlots = new();
+    private readonly HashSet<int> _selectedSlotIds = new();
+    private readonly List<FieldScheduleModel> _availableSlots = new();
+
+    private bool _loading = true;
+    private bool _scheduleLoading;
+    private string? _alert;
+    private bool _booking;
+
+    private int? _selectedFieldId;
+    private DateOnly _selectedDate = DateOnly.FromDateTime(DateTime.Today);
+
+    private readonly BookingFormState _form = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadFacilityAsync();
+    }
+
+    private async Task LoadFacilityAsync()
+    {
+        _loading = true;
+        _fields.Clear();
+        _facility = await FacilityService.GetFacilityAsync(FacilityId);
+
+        if (_facility is not null)
+        {
+            var fields = await FieldService.GetFieldsForFacilityAsync(FacilityId);
+            _fields.AddRange(fields);
+            _selectedFieldId = _fields.FirstOrDefault()?.FieldId;
+            await LoadScheduleAsync();
+        }
+
+        _loading = false;
+    }
+
+    private async Task LoadScheduleAsync()
+    {
+        _scheduleLoading = true;
+        _availableSlots.Clear();
+        _selectedSlots.Clear();
+        _selectedSlotIds.Clear();
+
+        if (_selectedFieldId is int fieldId)
+        {
+            var schedule = await FieldService.GetScheduleForFieldAsync(fieldId);
+            foreach (var slot in schedule)
+            {
+                if (slot.Date == _selectedDate)
+                {
+                    _availableSlots.Add(slot);
+                }
+            }
+
+            _availableSlots.Sort((a, b) => a.StartTime.GetValueOrDefault().CompareTo(b.StartTime.GetValueOrDefault()));
+        }
+
+        _scheduleLoading = false;
+    }
+
+    private async Task OnFieldChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var fieldId))
+        {
+            _selectedFieldId = fieldId;
+            await LoadScheduleAsync();
+        }
+    }
+
+    private Task OnDateChanged(ChangeEventArgs args)
+    {
+        if (DateOnly.TryParse(args.Value?.ToString(), out var date))
+        {
+            _selectedDate = date;
+            _ = LoadScheduleAsync();
+        }
+        return Task.CompletedTask;
+    }
+
+    private void ToggleSlot(FieldScheduleModel slot)
+    {
+        if (!IsSlotSelectable(slot))
+        {
+            return;
+        }
+
+        if (_selectedSlotIds.Contains(slot.ScheduleId))
+        {
+            _selectedSlotIds.Remove(slot.ScheduleId);
+            _selectedSlots.RemoveAll(s => s.ScheduleId == slot.ScheduleId);
+        }
+        else
+        {
+            _selectedSlotIds.Add(slot.ScheduleId);
+            _selectedSlots.Add(slot);
+        }
+    }
+
+    private async Task SubmitBooking()
+    {
+        if (_selectedFieldId is null || !_selectedSlotIds.Any())
+        {
+            _alert = "Select at least one available slot.";
+            return;
+        }
+
+        _booking = true;
+        _alert = null;
+
+        try
+        {
+            var request = new BookingRequestModel
+            {
+                FieldId = _selectedFieldId,
+                FacilityId = FacilityId,
+                GuestName = _form.GuestName,
+                GuestPhone = _form.GuestPhone,
+                Notes = _form.Notes,
+                SelectedSlotIds = _selectedSlotIds.ToList()
+            };
+
+            await BookingService.CreateBookingAsync(request);
+
+            _alert = "Booking created successfully!";
+            await LoadScheduleAsync();
+            _form.Reset();
+        }
+        catch (Exception ex)
+        {
+            _alert = $"Booking failed: {ex.Message}";
+        }
+        finally
+        {
+            _booking = false;
+        }
+    }
+
+    private bool IsSlotSelectable(FieldScheduleModel slot)
+    {
+        return string.Equals(slot.Status, "Available", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string FormatTime(string? time)
+    {
+        if (string.IsNullOrWhiteSpace(time))
+        {
+            return "--";
+        }
+
+        return time.Length >= 5 ? time[..5] : time;
+    }
+
+    private string GetFacilityInitials()
+    {
+        if (_facility?.Name is { Length: > 0 } name)
+        {
+            var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length == 1)
+            {
+                return parts[0][0].ToString().ToUpperInvariant();
+            }
+
+            return string.Concat(parts[0][0], parts[^1][0]).ToUpperInvariant();
+        }
+
+        return "SZ";
+    }
+
+    private string GetSelectedFieldName()
+    {
+        if (_selectedFieldId is int fieldId)
+        {
+            var field = _fields.FirstOrDefault(f => f.FieldId == fieldId);
+            return field?.FieldName ?? $"Sân {fieldId}";
+        }
+
+        return "--";
+    }
+
+    private string GetSelectedTimeRange()
+    {
+        if (!_selectedSlots.Any())
+        {
+            return "--";
+        }
+
+        var ordered = _selectedSlots
+            .Where(s => s.StartTime.HasValue && s.EndTime.HasValue)
+            .OrderBy(s => s.StartTime)
+            .ToList();
+
+        if (!ordered.Any())
+        {
+            return "--";
+        }
+
+        var start = ordered.First().StartTime?.ToString("HH:mm") ?? "--";
+        var end = ordered.Last().EndTime?.ToString("HH:mm") ?? "--";
+        return $"{start} - {end}";
+    }
+
+    private string GetSelectedDuration()
+    {
+        if (!_selectedSlots.Any())
+        {
+            return "--";
+        }
+
+        var totalMinutes = 0;
+        foreach (var slot in _selectedSlots)
+        {
+            if (slot.StartTime is { } start && slot.EndTime is { } end)
+            {
+                totalMinutes += (int)(end - start).TotalMinutes;
+            }
+        }
+
+        if (totalMinutes <= 0)
+        {
+            return "--";
+        }
+
+        var hours = totalMinutes / 60;
+        var minutes = totalMinutes % 60;
+
+        return hours switch
+        {
+            > 0 when minutes > 0 => $"{hours} giờ {minutes} phút",
+            > 0 => $"{hours} giờ",
+            _ => $"{minutes} phút"
+        };
+    }
+
+    private decimal GetTotalPrice() => _selectedSlots.Sum(s => s.Price ?? 0m);
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "available" => "slot-status--available",
+            "booked" => "slot-status--booked",
+            "blocked" => "slot-status--blocked",
+            _ => "slot-status--default"
+        };
+    }
+
+    private string GetStatusLabel(string status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "available" => "Còn trống",
+            "booked" => "Đã đặt",
+            "blocked" => "Khóa",
+            _ => "Không xác định"
+        };
+    }
+
+    private sealed class BookingFormState
+    {
+        [Required]
+        [StringLength(100)]
+        public string GuestName { get; set; } = string.Empty;
+
+        [Required]
+        [RegularExpression(@"^0[0-9]{9}$", ErrorMessage = "Phone number must contain 10 digits and start with 0.")]
+        public string GuestPhone { get; set; } = string.Empty;
+
+        public string? Notes { get; set; }
+
+        public void Reset()
+        {
+            GuestName = string.Empty;
+            GuestPhone = string.Empty;
+            Notes = string.Empty;
+        }
+    }
+}

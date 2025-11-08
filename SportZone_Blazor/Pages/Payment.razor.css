@@ -1,0 +1,201 @@
+.payment-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    padding: 2rem;
+}
+
+.payment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.payment-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+}
+
+.payment-header p {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-gray);
+}
+
+.payment-chip {
+    background-color: #ecfdf5;
+    color: #047857;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.payment-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.75rem;
+}
+
+.booking-summary,
+.payment-form {
+    background-color: var(--color-white);
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 22px 60px -45px rgba(15, 23, 42, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.booking-summary h2,
+.payment-form h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+}
+
+.summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: var(--color-text-gray);
+}
+
+.summary-label {
+    font-weight: 600;
+}
+
+.summary-value {
+    font-weight: 500;
+    color: var(--color-text-dark);
+}
+
+.summary-total {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #047857;
+}
+
+.help-card {
+    background-color: #f9fafb;
+    border-radius: 12px;
+    padding: 1.1rem;
+    color: var(--color-text-gray);
+}
+
+.help-card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.method-card {
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background-color: var(--color-white);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.method-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 12px 32px -24px rgba(15, 23, 42, 0.45);
+}
+
+.method-card.active {
+    border-color: var(--color-primary);
+    box-shadow: 0 18px 48px -36px rgba(15, 23, 42, 0.55);
+}
+
+.method-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.method-info strong {
+    display: block;
+    color: var(--color-text-dark);
+}
+
+.method-info small {
+    color: var(--color-text-gray);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
+}
+
+.form-grid input {
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--color-gray-300);
+}
+
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.secure-note {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-gray);
+}
+
+.payment-message {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background-color: #ecfdf5;
+    color: #047857;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .payment-page {
+        padding: 1.25rem;
+    }
+
+    .payment-layout {
+        grid-template-columns: 1fr;
+    }
+}
+

@@ -1,0 +1,83 @@
+@using SportZone_Blazor.Models
+
+<article class="field-card">
+    <div class="field-card__image">
+        <img src="@PrimaryImage" alt="@Field.Name" loading="lazy" />
+        @if (!IsAvailable)
+        {
+            <div class="field-card__overlay">
+                <span>Đã được đặt</span>
+            </div>
+        }
+    </div>
+    <div class="field-card__content">
+        <h3 class="field-card__title">@Field.Name</h3>
+        
+        <div class="field-card__info">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span>@Field.Address</span>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Field.OpenTime) && !string.IsNullOrEmpty(Field.CloseTime))
+        {
+            <div class="field-card__info">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon icon-green">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>@FormatTime(Field.OpenTime) - @FormatTime(Field.CloseTime)</span>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Field.Subdescription))
+        {
+            <p class="field-card__description">@Field.Subdescription</p>
+        }
+
+        @if (Field.CategoryFields.Count > 0)
+        {
+            <div class="field-card__tags">
+                @foreach (var category in Field.CategoryFields)
+                {
+                    <span class="category-tag">@category.CategoryFieldName</span>
+                }
+            </div>
+        }
+
+        <div class="field-card__footer">
+            <button class="field-card__btn" @onclick="OnBook" disabled="@(!IsAvailable)">
+                @(IsAvailable ? "Đặt sân" : "Hết chỗ")
+            </button>
+        </div>
+    </div>
+</article>
+
+@code {
+    [Parameter]
+    public FacilitySummaryModel Field { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<FacilitySummaryModel> BookClicked { get; set; }
+
+    private string PrimaryImage => Field.ImageUrls.FirstOrDefault() ?? "https://placehold.co/600x400?text=SportZone";
+
+    private bool IsAvailable => true; // This can be determined based on Field properties
+
+    private string FormatTime(string time)
+    {
+        if (string.IsNullOrEmpty(time)) return "";
+        var parts = time.Split(':');
+        return parts.Length >= 2 ? $"{parts[0]}:{parts[1]}" : time;
+    }
+
+    private async Task OnBook()
+    {
+        if (IsAvailable)
+        {
+            await BookClicked.InvokeAsync(Field);
+        }
+    }
+}

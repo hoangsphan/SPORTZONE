@@ -1,0 +1,165 @@
+@page "/"
+@using SportZone_Blazor.Services
+
+@inject IFacilityService FacilityService
+@inject NavigationManager NavigationManager
+
+<PageTitle>SportZone - Đặt Sân Thể Thao</PageTitle>
+
+<!-- Header Component (Portal style) -->
+<AppHeader />
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="max-w-4xl mx-auto z-10 relative">
+        <h1>Đặt Sân Nhanh - Dễ Dàng - Uy Tín</h1>
+        <p>Nền tảng hàng đầu giúp bạn đặt sân thể thao chỉ trong vài cú click.</p>
+        <button class="hero-btn" @onclick="NavigateToFields">
+            Đặt sân ngay
+        </button>
+    </div>
+</section>
+
+<!-- Featured Facilities Section -->
+<section class="featured-section">
+    <h2>Các sân nổi bật</h2>
+    
+    @if (_loading)
+    {
+        <div class="flex justify-center items-center" style="height: 8rem;">
+            <div class="spinner"></div>
+            <p style="margin-left: 1rem; color: #6b7280;">Đang tải danh sách sân...</p>
+        </div>
+    }
+    else if (_error != null)
+    {
+        <div class="flex justify-center items-center" style="height: 8rem;">
+            <p style="color: #ef4444;">@_error</p>
+        </div>
+    }
+    else
+    {
+        <div class="facilities-grid">
+            @foreach (var facility in _featured)
+            {
+                <div class="facility-card" @onclick="@(() => NavigateToFacility(facility.FacilityId))">
+                    <img src="@(facility.ImageUrls.FirstOrDefault() ?? "https://placehold.co/600x400?text=SportZone")" 
+                         alt="@facility.Name" 
+                         loading="lazy" />
+                    <div class="facility-card-body">
+                        <h3>@facility.Name</h3>
+                        <p>@facility.Address</p>
+                        <button>Xem chi tiết</button>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <div class="text-center mt-4">
+            <button class="btn btn-primary" @onclick="NavigateToFields" style="padding: 1rem 2rem; border-radius: 8px;">
+                Xem tất cả sân
+            </button>
+        </div>
+    }
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="why-section">
+    <div class="why-section-content">
+        <h2>Tại sao nên chọn chúng tôi?</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div style="font-size: 2rem; color: #1ec391; margin-bottom: 1rem;">📱</div>
+                <h3>Giao diện thân thiện</h3>
+                <p>Dễ sử dụng cho mọi lứa tuổi, từ học sinh đến người lớn tuổi.</p>
+            </div>
+            <div class="feature-item">
+                <div style="font-size: 2rem; color: #1ec391; margin-bottom: 1rem;">⚡</div>
+                <h3>Đặt sân chỉ vài giây</h3>
+                <p>Chọn sân, chọn giờ, xác nhận – cực kỳ nhanh chóng và tiện lợi.</p>
+            </div>
+            <div class="feature-item">
+                <div style="font-size: 2rem; color: #1ec391; margin-bottom: 1rem;">📋</div>
+                <h3>Nhiều lựa chọn sân</h3>
+                <p>Hàng trăm sân bóng, cầu lông, tennis… tại mọi quận huyện.</p>
+            </div>
+            <div class="feature-item">
+                <div style="font-size: 2rem; color: #1ec391; margin-bottom: 1rem;">🛡️</div>
+                <h3>An toàn thông tin</h3>
+                <p>Chúng tôi cam kết bảo mật thông tin người dùng và thanh toán.</p>
+            </div>
+            <div class="feature-item">
+                <div style="font-size: 2rem; color: #1ec391; margin-bottom: 1rem;">📍</div>
+                <h3>Tìm sân gần bạn</h3>
+                <p>Dựa trên vị trí hiện tại, hệ thống gợi ý sân phù hợp nhất.</p>
+            </div>
+            <div class="feature-item">
+                <div style="font-size: 2rem; color: #1ec391; margin-bottom: 1rem;">🔄</div>
+                <h3>Linh hoạt & tiện lợi</h3>
+                <p>Cho phép thay đổi lịch, hủy sân dễ dàng – không ràng buộc.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer Section -->
+<footer style="background-color: #1a3c34; color: white; padding: 3rem 1.5rem; text-align: center;">
+    <div style="max-width: 1280px; margin: 0 auto;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+            <div>
+                <h3 style="color: #1ebd6f; margin-bottom: 1rem;">SportZone</h3>
+                <p style="font-size: 0.875rem; color: #9ca3af;">Nền tảng đặt sân thể thao hàng đầu Việt Nam</p>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 1rem;">Liên kết</h4>
+                <ul style="list-style: none; padding: 0; font-size: 0.875rem;">
+                    <li style="margin-bottom: 0.5rem;"><a href="/" style="color: #9ca3af; text-decoration: none;">Trang chủ</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="/field-list" style="color: #9ca3af; text-decoration: none;">Danh sách sân</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 1rem;">Liên hệ</h4>
+                <p style="font-size: 0.875rem; color: #9ca3af;">Email: info@sportzone.vn</p>
+                <p style="font-size: 0.875rem; color: #9ca3af;">Hotline: 1900 xxxx</p>
+            </div>
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 1.5rem;">
+            <p style="font-size: 0.875rem; color: #9ca3af;">© 2025 SportZone. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+@code {
+    private readonly List<FacilitySummaryModel> _featured = new();
+    private bool _loading = true;
+    private string? _error = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            var facilities = await FacilityService.GetFacilitiesAsync();
+            _featured.AddRange(facilities.Take(3));
+        }
+        catch (Exception ex)
+        {
+            _error = "Không thể tải danh sách sân. Vui lòng thử lại sau.";
+            Console.WriteLine($"Error loading facilities: {ex.Message}");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void NavigateToFields()
+    {
+        NavigationManager.NavigateTo("/field-list");
+    }
+
+    private void NavigateToFacility(int facilityId)
+    {
+        NavigationManager.NavigateTo($"/facility/{facilityId}");
+    }
+}

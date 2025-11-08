@@ -1,0 +1,157 @@
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<header class="app-header">
+    <nav class="header-nav">
+        <div class="header-brand">
+            <a href="/" class="brand-link">
+                <span class="brand-icon">⚽</span>
+                <span class="brand-text">SportZone</span>
+            </a>
+        </div>
+        
+        <div class="header-links">
+            <a href="/" class="nav-link">Trang chủ</a>
+            <a href="/field-list" class="nav-link">Danh sách sân</a>
+            @if (IsAuthenticated)
+            {
+                <a href="/booking-history" class="nav-link">Lịch sử đặt sân</a>
+            }
+            @if (IsAdminOrOwner)
+            {
+                <a href="@GetManagementLink()" class="nav-link">
+                    @GetManagementText()
+                </a>
+            }
+        </div>
+
+        <div class="header-actions">
+            <form class="search-form" @onsubmit="HandleSearch" @onsubmit:preventDefault="true">
+                <input 
+                    type="text" 
+                    placeholder="Tìm sân bóng..." 
+                    class="search-input"
+                    @bind="SearchValue"
+                    @oninput="OnSearchInput" />
+                <button type="submit" class="search-btn" title="Tìm kiếm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                </button>
+            </form>
+
+            @if (!IsAuthenticated)
+            {
+                <button class="login-btn" @onclick="@(() => Navigation.NavigateTo("/login"))">
+                    Đăng nhập
+                </button>
+            }
+            else
+            {
+                <div class="user-menu">
+                    <div class="user-info" @onclick="ToggleProfileMenu">
+                        <img src="@GetUserAvatar()" alt="avatar" class="user-avatar" />
+                        <span class="user-email">@GetUserEmail()</span>
+                    </div>
+                    
+                    @if (ShowProfileMenu)
+                    {
+                        <div class="profile-dropdown">
+                            <button class="dropdown-item logout-item" @onclick="HandleLogout">
+                                Đăng xuất
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </nav>
+</header>
+
+@code {
+    private string SearchValue { get; set; } = "";
+    private bool ShowProfileMenu { get; set; } = false;
+    private bool IsAuthenticated { get; set; } = false;
+    private bool IsAdminOrOwner { get; set; } = false;
+    private int UserRoleId { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "token");
+            IsAuthenticated = !string.IsNullOrEmpty(token);
+            
+            if (IsAuthenticated)
+            {
+                var userJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "user");
+                if (!string.IsNullOrEmpty(userJson))
+                {
+                    // Parse user data to get RoleId
+                    // For now, setting default values
+                    UserRoleId = 2; // Default to FieldOwner for testing
+                    IsAdminOrOwner = UserRoleId == 2 || UserRoleId == 3 || UserRoleId == 4;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user data: {ex.Message}");
+        }
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        SearchValue = e.Value?.ToString() ?? "";
+    }
+
+    private void HandleSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchValue))
+        {
+            Navigation.NavigateTo($"/field-list?search={Uri.EscapeDataString(SearchValue.Trim())}");
+        }
+        else
+        {
+            Navigation.NavigateTo("/field-list");
+        }
+    }
+
+    private void ToggleProfileMenu()
+    {
+        ShowProfileMenu = !ShowProfileMenu;
+    }
+
+    private string GetManagementLink()
+    {
+        return UserRoleId == 3 ? "/users-manager" : "/facility-manager";
+    }
+
+    private string GetManagementText()
+    {
+        return UserRoleId == 3 ? "Quản lý admin" : "Quản lý cơ sở";
+    }
+
+    private string GetUserAvatar()
+    {
+        return "https://www.vietnamworks.com/hrinsider/wp-content/uploads/2023/12/anh-den-ngau.jpeg";
+    }
+
+    private string GetUserEmail()
+    {
+        return "user@sportzone.com";
+    }
+
+    private async Task HandleLogout()
+    {
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "token");
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "user");
+        Navigation.NavigateTo("/login", true);
+    }
+}

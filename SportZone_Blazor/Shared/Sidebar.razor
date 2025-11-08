@@ -1,0 +1,168 @@
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<aside class="sidebar">
+    <!-- User Info Header -->
+    <div class="sidebar-header">
+        <div class="user-info-section">
+            <div class="user-avatar-container">
+                <div class="user-avatar">
+                    <span class="user-initial">@GetUserInitial()</span>
+                </div>
+            </div>
+            <div class="user-details">
+                <div class="user-name">@GetUserName()</div>
+                <div class="user-role">@GetUserRole()</div>
+            </div>
+        </div>
+        <button class="logout-btn" @onclick="HandleLogout" title="Đăng xuất">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+        <NavLink href="/" Match="NavLinkMatch.All" class="sidebar-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span>Trang chủ</span>
+        </NavLink>
+
+        @if (IsAdmin)
+        {
+            <NavLink href="/users-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Quản lý tài khoản</span>
+            </NavLink>
+            <NavLink href="/regulation-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <span>Quản lý quy định</span>
+            </NavLink>
+        }
+
+        @if (IsFieldOwner)
+        {
+            <NavLink href="/facility-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M9 3v18"/>
+                    <path d="M15 3v18"/>
+                </svg>
+                <span>Cơ sở</span>
+            </NavLink>
+            <NavLink href="/staff-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                </svg>
+                <span>Nhân viên</span>
+            </NavLink>
+            <NavLink href="/finance-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                <span>Quản lý tài chính</span>
+            </NavLink>
+            <NavLink href="/order-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                    <rect x="9" y="3" width="6" height="4" rx="1"/>
+                    <path d="M9 12h6"/>
+                    <path d="M9 16h6"/>
+                </svg>
+                <span>Đơn đặt</span>
+            </NavLink>
+        }
+
+        @if (IsStaff)
+        {
+            <NavLink href="/facility-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M9 3v18"/>
+                    <path d="M15 3v18"/>
+                </svg>
+                <span>Cơ sở</span>
+            </NavLink>
+            <NavLink href="/order-manager" class="sidebar-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                    <rect x="9" y="3" width="6" height="4" rx="1"/>
+                </svg>
+                <span>Đơn đặt</span>
+            </NavLink>
+        }
+    </nav>
+</aside>
+
+@code {
+    private bool IsAdmin => GetRoleId() == 3;
+    private bool IsFieldOwner => GetRoleId() == 2;
+    private bool IsStaff => GetRoleId() == 4;
+
+    private int GetRoleId()
+    {
+        // This should get the user's role from localStorage or a state service
+        // For now, returning a default value
+        return 2; // Default to FieldOwner for testing
+    }
+
+    private string GetUserInitial()
+    {
+        var email = GetUserEmail();
+        return !string.IsNullOrEmpty(email) ? email[0].ToString().ToUpper() : "U";
+    }
+
+    private string GetUserName()
+    {
+        var email = GetUserEmail();
+        if (!string.IsNullOrEmpty(email))
+        {
+            var parts = email.Split('@');
+            return parts[0];
+        }
+        return "Người dùng";
+    }
+
+    private string GetUserRole()
+    {
+        return GetRoleId() switch
+        {
+            3 => "Admin",
+            2 => "Chủ sân",
+            4 => "Nhân viên",
+            _ => "Người dùng"
+        };
+    }
+
+    private string GetUserEmail()
+    {
+        // This should get user email from localStorage or state service
+        return "user@sportzone.com";
+    }
+
+    private async Task HandleLogout()
+    {
+        // Clear localStorage and navigate to login
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "token");
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "user");
+        Navigation.NavigateTo("/login", true);
+    }
+}

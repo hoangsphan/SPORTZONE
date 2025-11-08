@@ -1,0 +1,29 @@
+.page-layout[b-pgirogfb0z] {
+    min-height: 100vh;
+    background-color: #ffffff;
+}
+
+.app-shell[b-pgirogfb0z] {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f9fafb;
+}
+
+.app-content[b-pgirogfb0z] {
+    flex: 1;
+    margin-left: 256px;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content[b-pgirogfb0z] {
+    flex: 1;
+    padding: 1.5rem 2rem;
+}
+
+@media (max-width: 768px) {
+    .app-content[b-pgirogfb0z] {
+        margin-left: 0;
+    }
+}

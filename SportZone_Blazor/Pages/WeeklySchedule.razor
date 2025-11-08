@@ -1,0 +1,132 @@
+@page "/weekly-schedule"
+
+<PageTitle>Lịch tuần - SportZone</PageTitle>
+
+<div class="schedule-page">
+    <div class="schedule-header">
+        <div>
+            <h1>Lịch đặt sân tuần này</h1>
+            <p>Kiểm tra nhanh các khung giờ đã đặt và tình trạng sân trong 7 ngày tới.</p>
+        </div>
+        <span class="schedule-range">@_start.ToString("dd/MM") - @_end.ToString("dd/MM")</span>
+    </div>
+
+    <div class="schedule-grid">
+        @foreach (var day in _week)
+        {
+            <section class="schedule-card">
+                <header>
+                    <div>
+                        <h2>@day.DayLabel</h2>
+                        <span class="day-date">@day.Date.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <span class="slot-counter">@day.Slots.Count đặt sân</span>
+                </header>
+
+                @if (day.Slots.Count == 0)
+                {
+                    <div class="schedule-empty">Chưa có lịch đặt sân trong ngày.</div>
+                }
+                else
+                {
+                    <ul class="slot-list">
+                        @foreach (var slot in day.Slots)
+                        {
+                            <li class="slot-item @(slot.Status.ToLowerInvariant())">
+                                <div class="slot-time">@slot.TimeRange</div>
+                                <div class="slot-info">
+                                    <span class="slot-field">@slot.FieldName</span>
+                                    <span class="slot-customer">@slot.Customer</span>
+                                </div>
+                                <span class="slot-status">@GetStatusLabel(slot.Status)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        }
+    </div>
+
+    <section class="legend">
+        <h3>Trạng thái khung giờ</h3>
+        <div class="legend-items">
+            <span><span class="dot booked"></span> Đã đặt</span>
+            <span><span class="dot pending"></span> Chờ xác nhận</span>
+            <span><span class="dot available"></span> Còn trống</span>
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly DateOnly _start = DateOnly.FromDateTime(DateTime.Today);
+    private readonly DateOnly _end;
+    private readonly IReadOnlyList<ScheduleDay> _week;
+
+    public WeeklySchedule()
+    {
+        _end = _start.AddDays(6);
+        _week = Enumerable.Range(0, 7)
+            .Select(offset => CreateDay(_start.AddDays(offset)))
+            .ToList();
+    }
+
+    private ScheduleDay CreateDay(DateOnly date)
+    {
+        var slots = date.DayOfWeek switch
+        {
+            DayOfWeek.Monday => new List<ScheduleSlot>
+            {
+                new("18:00 - 19:30", "Sân A1", "Đội bóng Phố Núi", "Booked"),
+                new("20:00 - 21:30", "Sân A2", "CLB Gym Star", "Pending")
+            },
+            DayOfWeek.Wednesday => new List<ScheduleSlot>
+            {
+                new("17:30 - 19:00", "Sân B1", "FPT United", "Booked"),
+                new("19:15 - 20:45", "Sân B2", "Traning U17", "Booked"),
+                new("21:00 - 22:00", "Sân B1", "Khách lẻ", "Available")
+            },
+            DayOfWeek.Friday => new List<ScheduleSlot>
+            {
+                new("18:00 - 19:30", "Sân A1", "Công ty ABC", "Booked"),
+                new("19:45 - 21:15", "Sân A1", "Team Chủ sân", "Available")
+            },
+            DayOfWeek.Saturday => new List<ScheduleSlot>
+            {
+                new("07:00 - 08:30", "Sân B3", "Học viện KidSport", "Booked"),
+                new("09:00 - 10:30", "Sân B3", "Q7 Fitness", "Booked"),
+                new("20:00 - 22:00", "Sân A2", "Cúp nội bộ", "Pending")
+            },
+            DayOfWeek.Sunday => new List<ScheduleSlot>
+            {
+                new("16:00 - 17:30", "Sân B1", "Gia đình Phạm", "Booked"),
+                new("18:00 - 19:30", "Sân A3", "CLB Người mới", "Available")
+            },
+            _ => new List<ScheduleSlot>()
+        };
+
+        return new ScheduleDay(date, GetDayLabel(date), slots);
+    }
+
+    private static string GetDayLabel(DateOnly date)
+        => date.DayOfWeek switch
+        {
+            DayOfWeek.Monday => "Thứ 2",
+            DayOfWeek.Tuesday => "Thứ 3",
+            DayOfWeek.Wednesday => "Thứ 4",
+            DayOfWeek.Thursday => "Thứ 5",
+            DayOfWeek.Friday => "Thứ 6",
+            DayOfWeek.Saturday => "Thứ 7",
+            _ => "Chủ nhật"
+        };
+
+    private static string GetStatusLabel(string status) => status.ToLowerInvariant() switch
+    {
+        "booked" => "Đã đặt",
+        "pending" => "Chờ xác nhận",
+        _ => "Còn trống"
+    };
+
+    private sealed record ScheduleDay(DateOnly Date, string DayLabel, IReadOnlyList<ScheduleSlot> Slots);
+
+    private sealed record ScheduleSlot(string TimeRange, string FieldName, string Customer, string Status);
+}

@@ -1,0 +1,68 @@
+@page
+@model SportZone_API.Pages.BookingHistoryModel
+@{
+    ViewData["Title"] = "Booking History";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Field
+                </th>
+                <th>
+                    Facility
+                </th>
+                <th>
+                    Address
+                </th>
+                <th>
+                    Date
+                </th>
+                <th>
+                    Time
+                </th>
+                <th>
+                    Status
+                </th>
+                <th>
+                    Notes
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.BookingList != null)
+            {
+                @foreach (var item in Model.BookingList)
+                {
+                    <tr>
+                        <td>
+                            @item.Field.Name
+                        </td>
+                        <td>
+                            @item.Field.Facility.Name
+                        </td>
+                        <td>
+                            @item.Field.Facility.Location
+                        </td>
+                        <td>
+                            @item.Date.ToShortDateString()
+                        </td>
+                        <td>
+                            @item.StartTime - @item.EndTime
+                        </td>
+                        <td>
+                            @item.Status
+                        </td>
+                        <td>
+                            @item.Notes
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

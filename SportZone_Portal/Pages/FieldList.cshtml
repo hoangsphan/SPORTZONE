@@ -1,0 +1,43 @@
+@page
+@model SportZone_API.Pages.FieldListModel
+@{
+    ViewData["Title"] = "Field List";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <form>
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" name="searchTerm" class="form-control" placeholder="Search by name or location" value="@Request.Query["searchTerm"]" />
+            </div>
+            <div class="col-md-4">
+                <select name="fieldType" class="form-control" asp-items="Model.Categories">
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <hr />
+
+    <div class="row">
+        @foreach (var field in Model.FieldList)
+        {
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@field.Name</h5>
+                        <p class="card-text">@field.Location</p>
+                        <p class="card-text">@field.Description</p>
+                        <a href="/Booking/@field.FieldID" class="btn btn-primary">Book</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

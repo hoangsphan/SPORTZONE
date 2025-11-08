@@ -1,0 +1,231 @@
+.app-header {
+    background-color: #1a3c34;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    padding: 1rem 1.5rem;
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Brand */
+.header-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #1ebd6f;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.brand-icon {
+    font-size: 1.5rem;
+}
+
+.brand-text {
+    color: #1ebd6f;
+}
+
+/* Navigation Links */
+.header-links {
+    display: none;
+    align-items: center;
+    gap: 2rem;
+    margin-left: 3rem;
+    flex: 1;
+}
+
+@media (min-width: 768px) {
+    .header-links {
+        display: flex;
+    }
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #1ebd6f;
+}
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Search Form */
+.search-form {
+    position: relative;
+    width: 256px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    padding-right: 2.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    color: #1f2937;
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
+}
+
+.search-input:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: #1ebd6f;
+}
+
+.search-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #1ebd6f;
+    color: white;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    width: 32px;
+    transition: background-color 0.2s;
+}
+
+.search-btn:hover {
+    background-color: #159e5a;
+}
+
+.search-btn:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: #1ebd6f;
+}
+
+/* Login Button */
+.login-btn {
+    padding: 0.5rem 1.5rem;
+    border: 2px solid #1ebd6f;
+    color: #1ebd6f;
+    background-color: transparent;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.login-btn:hover {
+    background-color: #e6f6ef;
+}
+
+/* User Menu */
+.user-menu {
+    position: relative;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s;
+}
+
+.user-info:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid white;
+    object-fit: cover;
+}
+
+.user-email {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+    position: absolute;
+    right: 0;
+    margin-top: 0.5rem;
+    background-color: white;
+    color: #333;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 192px;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.logout-item {
+    color: #ef4444;
+}
+
+.logout-item:hover {
+    background-color: #fef2f2;
+}
+
+@media (max-width: 768px) {
+    .header-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-form {
+        width: 100%;
+    }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

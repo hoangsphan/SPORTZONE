@@ -1,0 +1,125 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = SportZone_Blazor
+build_property.RootNamespace = SportZone_Blazor
+build_property.ProjectDir = C:\Users\huangfan\Downloads\SPORTZONE\SportZone_Blazor\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\huangfan\Downloads\SPORTZONE\SportZone_Blazor
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/BookingHistory.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQm9va2luZ0hpc3RvcnkucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/FacilityDetail.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmFjaWxpdHlEZXRhaWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Components/Fields/FieldCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xGaWVsZHNcRmllbGRDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-8idsluzn0w
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/Booking.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQm9va2luZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-xx9zm24lq4
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/FacilityManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmFjaWxpdHlNYW5hZ2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-9jn0z1yncj
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/FieldList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmllbGRMaXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-c602j22c8c
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/FieldManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmllbGRNYW5hZ2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-vewo41um0p
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/FinanceManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmluYW5jZU1hbmFnZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-j0kjfgpv6w
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/GoogleAuthCallback.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcR29vZ2xlQXV0aENhbGxiYWNrLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-izmdbfxqvo
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-a6h2su4rcn
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/OrderManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT3JkZXJNYW5hZ2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-tg94mi8h4z
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/Payment.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGF5bWVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-xs99y598se
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/PaymentFailed.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGF5bWVudEZhaWxlZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-nbmhg699xx
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/PaymentSuccess.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGF5bWVudFN1Y2Nlc3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-1tvw25kkxb
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/RegulationManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVndWxhdGlvbk1hbmFnZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-0xu0zqx489
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/ServiceManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2VydmljZU1hbmFnZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-8nrvsomezy
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/StaffManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhZmZNYW5hZ2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-6tgmhg96wo
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/UsersManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlcnNNYW5hZ2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-5hx9u8xuyi
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Pages/WeeklySchedule.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcV2Vla2x5U2NoZWR1bGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-t810k7ytqn
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Shared/AppHeader.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEFwcEhlYWRlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-atqlq44fk5
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-pgirogfb0z
+
+[C:/Users/huangfan/Downloads/SPORTZONE/SportZone_Blazor/Shared/Sidebar.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFNpZGViYXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-m5gp3m3uj3
