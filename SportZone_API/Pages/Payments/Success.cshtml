@@ -1,0 +1,46 @@
+
+@page "/payments/success"
+@model SportZone_API.Pages.Payments.SuccessModel
+@{
+    ViewData["Title"] = "Thanh toán thành công";
+    var historyRouteValues = Model.HistoryUserId.HasValue
+        ? new { UserId = Model.HistoryUserId }
+        : null;
+}
+
+<div class="payment-result payment-result--success">
+    <div class="payment-result__card">
+        <div class="payment-result__icon">
+            <span class="payment-result__icon-circle text-success bg-success-subtle">
+                <i class="fa-solid fa-check"></i>
+            </span>
+        </div>
+        <h1 class="payment-result__title">Thanh toán thành công</h1>
+        <p class="payment-result__message">@Model.DisplayMessage</p>
+        @if (!string.IsNullOrWhiteSpace(Model.BookingCode))
+        {
+            <p class="payment-result__meta">Mã booking: <span class="fw-semibold text-success">@Model.BookingCode</span></p>
+        }
+        <div class="payment-result__actions">
+            @if (historyRouteValues is not null)
+            {
+                <a class="btn btn-success" asp-page="/Bookings/History" asp-all-route-data="historyRouteValues">
+                    <i class="fa-solid fa-clipboard-list me-2"></i>Xem lịch sử đặt sân
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-success" asp-page="/Bookings/History">
+                    <i class="fa-solid fa-clipboard-list me-2"></i>Xem lịch sử đặt sân
+                </a>
+            }
+            <a class="btn btn-outline-success" asp-page="/Index">
+                <i class="fa-solid fa-house me-2"></i>Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

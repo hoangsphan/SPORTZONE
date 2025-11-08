@@ -1,0 +1,42 @@
+
+@page "/payments/failed"
+@model SportZone_API.Pages.Payments.FailedModel
+@{
+    ViewData["Title"] = "Thanh toán thất bại";
+    var historyRouteValues = Model.HistoryUserId.HasValue
+        ? new { UserId = Model.HistoryUserId }
+        : null;
+}
+
+<div class="payment-result payment-result--failed">
+    <div class="payment-result__card">
+        <div class="payment-result__icon">
+            <span class="payment-result__icon-circle text-danger bg-danger-subtle">
+                <i class="fa-solid fa-xmark"></i>
+            </span>
+        </div>
+        <h1 class="payment-result__title">Thanh toán thất bại</h1>
+        <p class="payment-result__message">@Model.DisplayError</p>
+        <div class="payment-result__actions">
+            @if (historyRouteValues is not null)
+            {
+                <a class="btn btn-danger" asp-page="/Bookings/History" asp-all-route-data="historyRouteValues">
+                    <i class="fa-solid fa-clipboard-list me-2"></i>Xem lịch sử đặt sân
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-danger" asp-page="/Bookings/History">
+                    <i class="fa-solid fa-clipboard-list me-2"></i>Xem lịch sử đặt sân
+                </a>
+            }
+            <a class="btn btn-outline-danger" asp-page="/Index">
+                <i class="fa-solid fa-house me-2"></i>Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
