@@ -9,8 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
-using Microsoft.AspNetCore.SignalR; // Thêm using này
-using SportZone_API.Hubs; // Thêm using này
+using System.IO;
+using Microsoft.AspNetCore.SignalR;
+using SportZone_API.Hubs;
 
 namespace SportZone_API.Services
 {
@@ -25,7 +26,7 @@ namespace SportZone_API.Services
             IFacilityRepository repository,
             IMapper mapper,
             IWebHostEnvironment env,
-            IHubContext<NotificationHub> hubContext) // Thêm vào constructor
+            IHubContext<NotificationHub> hubContext)
         {
             _repository = repository;
             _mapper = mapper;
@@ -99,6 +100,46 @@ namespace SportZone_API.Services
                     Success = false,
                     Message = $"Đã xảy ra lỗi khi lấy danh sách cơ sở chi tiết: {ex.Message}",
                     Data = null
+                };
+            }
+        }
+
+        public async Task<ServiceResponse<FacilityDetailDto>> GetFacilityDetailsAsync(int facilityId)
+        {
+            if (facilityId <= 0)
+            {
+                return new ServiceResponse<FacilityDetailDto>
+                {
+                    Success = false,
+                    Message = "Mã cơ sở không hợp lệ."
+                };
+            }
+
+            try
+            {
+                var facility = await _repository.GetByIdAsync(facilityId);
+                if (facility is null)
+                {
+                    return new ServiceResponse<FacilityDetailDto>
+                    {
+                        Success = true,
+                        Message = "Không tìm thấy cơ sở theo yêu cầu."
+                    };
+                }
+
+                var facilityDetail = _mapper.Map<FacilityDetailDto>(facility);
+                return new ServiceResponse<FacilityDetailDto>
+                {
+                    Success = true,
+                    Data = facilityDetail
+                };
+            }
+            catch (Exception exception)
+            {
+                return new ServiceResponse<FacilityDetailDto>
+                {
+                    Success = false,
+                    Message = $"Đã xảy ra lỗi khi tải thông tin cơ sở: {exception.Message}"
                 };
             }
         }

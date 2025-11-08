@@ -1,0 +1,532 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f8;
+    color: #1f2933;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+.hero {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(16, 185, 129, 0.85));
+    color: #fff;
+    border-radius: 1.5rem;
+    padding: 4rem 3rem;
+}
+
+.hero .lead {
+    max-width: 720px;
+}
+
+.facility-card {
+    border-radius: 1rem;
+    box-shadow: 0 0.75rem 2rem rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    background: #fff;
+}
+
+.facility-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1.25rem 2.5rem rgba(15, 23, 42, 0.15);
+}
+
+.facility-card__image {
+    object-fit: cover;
+    height: 220px;
+    width: 100%;
+}
+
+.facility-card__badges {
+    gap: 0.5rem;
+}
+
+.facility-card__description {
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.facility-card__category {
+    background-color: #f8fafc;
+    color: #1f2937;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.facility-card__status-meta {
+    min-height: 1.25rem;
+}
+
+.facility-card__footer {
+    background-color: transparent;
+}
+
+.facility-card__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.facility-card__actions .btn {
+    flex: 1 1 48%;
+}
+
+.share-trigger {
+    position: relative;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.share-trigger[data-share-state="copied"],
+.share-trigger[data-share-state="shared"] {
+    background-color: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #047857;
+}
+
+.badge-soft-primary {
+    color: #2563eb;
+    background-color: rgba(37, 99, 235, 0.12);
+}
+
+.badge-soft-success {
+    color: #059669;
+    background-color: rgba(16, 185, 129, 0.12);
+}
+
+.badge-soft-warning {
+    color: #d97706;
+    background-color: rgba(234, 179, 8, 0.12);
+}
+
+.badge-soft-danger {
+    color: #dc2626;
+    background-color: rgba(248, 113, 113, 0.14);
+}
+
+.badge-soft-info {
+    color: #0ea5e9;
+    background-color: rgba(14, 165, 233, 0.14);
+}
+
+.badge-soft-secondary {
+    color: #6b7280;
+    background-color: rgba(107, 114, 128, 0.14);
+}
+
+.badge-soft-neutral {
+    color: #475569;
+    background-color: rgba(71, 85, 105, 0.12);
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-badge:hover,
+.filter-badge:focus {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #1f2937;
+    box-shadow: 0 0.25rem 0.75rem rgba(37, 99, 235, 0.15);
+}
+
+.filter-badge i {
+    font-size: 0.85rem;
+}
+
+.search-panel {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+    padding: 1.5rem;
+}
+
+.search-panel .form-control,
+.search-panel .form-select {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+}
+
+.alert-soft {
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    background-color: rgba(37, 99, 235, 0.05);
+    color: #1f2933;
+}
+
+.empty-state {
+    padding: 3rem;
+    border-radius: 1rem;
+    background-color: #fff;
+    border: 1px dashed rgba(15, 23, 42, 0.15);
+}
+
+.facility-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+    gap: 2rem;
+    background: #fff;
+    border-radius: 1.5rem;
+    overflow: hidden;
+}
+
+.facility-hero__image-wrapper {
+    position: relative;
+    min-height: 260px;
+}
+
+.facility-hero__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.facility-hero__content {
+    padding: 2.5rem 2.5rem 2.5rem 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.facility-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.facility-hero__actions .btn {
+    min-width: 180px;
+}
+
+.facility-overview {
+    background: #fff;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+}
+
+.section-heading h2 {
+    font-weight: 600;
+}
+
+.field-card,
+.service-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    box-shadow: 0 0.75rem 2rem rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-card:hover,
+.service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1.25rem 2.5rem rgba(15, 23, 42, 0.15);
+}
+
+.field-card__description,
+.service-card__description {
+    color: #4b5563;
+}
+
+.field-card__pricing li:last-child {
+    border-bottom: none;
+}
+
+.regulation-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    box-shadow: 0 0.5rem 1.75rem rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.regulation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1rem 2.25rem rgba(15, 23, 42, 0.14);
+}
+
+.regulation-card__description {
+    color: #374151;
+    line-height: 1.6;
+}
+
+@media (max-width: 991.98px) {
+    .facility-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .facility-hero__content {
+        padding: 2rem;
+    }
+
+    .facility-card__actions .btn {
+        flex: 1 1 100%;
+    }
+}
+
+.footer {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 3rem 0;
+}
+
+.footer a {
+    color: inherit;
+}
+
+
+.booking-filters {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+}
+
+.booking-summary {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.booking-summary__card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+}
+
+.booking-summary__icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.booking-summary__label {
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.booking-summary__value {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.booking-breakdown {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+}
+
+.booking-upcoming__card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.booking-upcoming__card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 1rem 2.25rem rgba(15, 23, 42, 0.12);
+}
+
+.booking-table .badge {
+    width: fit-content;
+}
+
+.account-page {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.account-card {
+    width: min(720px, 100%);
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.12);
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.account-card__header h1 {
+    font-weight: 600;
+}
+
+.account-card__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+form.account-card__form,
+.account-card__form form {
+    background: #f8fafc;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
+}
+
+.account-card__alert {
+    border-radius: 0.85rem;
+    padding: 1rem 1.25rem;
+}
+
+.account-card__result dl {
+    margin-bottom: 0;
+}
+
+.account-card__token {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
+    white-space: pre-wrap;
+    max-height: 240px;
+    overflow: auto;
+}
+
+.account-card__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.form-section {
+    background: #f8fafc;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
+    display: none;
+}
+
+.form-section.is-visible {
+    display: block;
+}
+
+.form-section__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #475569;
+}
+
+@media (max-width: 576px) {
+    .account-card {
+        padding: 1.75rem;
+    }
+
+    .account-card__form form {
+        padding: 1.25rem;
+    }
+}
+
+.payment-result {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1rem;
+}
+
+.payment-result__card {
+    background: #fff;
+    border-radius: 1.5rem;
+    padding: 3rem 2.5rem;
+    max-width: 540px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 2rem 4rem rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.payment-result__icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.payment-result__icon-circle {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.12);
+}
+
+.payment-result__title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.payment-result__message {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #4b5563;
+}
+
+.payment-result__meta {
+    color: #1f2937;
+    margin-bottom: 1.75rem;
+}
+
+.payment-result__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.payment-result__actions .btn {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+}
+
+@media (min-width: 576px) {
+    .payment-result__actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .payment-result__actions .btn {
+        min-width: 200px;
+    }
+}
+
+.payment-result--success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(96, 165, 250, 0.1));
+}
+
+.payment-result--failed {
+    background: linear-gradient(135deg, rgba(248, 113, 113, 0.18), rgba(254, 240, 138, 0.12));
+}

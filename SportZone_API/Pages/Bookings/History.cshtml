@@ -1,0 +1,256 @@
+
+@page "/bookings/history"
+@model SportZone_API.Pages.Bookings.HistoryModel
+@{
+    ViewData["Title"] = "Lịch sử đặt sân";
+}
+
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Lịch sử đặt sân</h1>
+        <p class="text-muted mb-0">Theo dõi các lượt đặt sân của người dùng và tình trạng thanh toán mới nhất.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-page="/Index"><i class="fa-solid fa-house me-2"></i>Trang chủ</a>
+        <a class="btn btn-primary" asp-page="/Facilities/Index"><i class="fa-solid fa-futbol me-2"></i>Khám phá cơ sở</a>
+    </div>
+</div>
+
+<section class="booking-filters mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-12 col-md-3">
+            <label asp-for="UserId" class="form-label">ID người dùng</label>
+            <input asp-for="UserId" class="form-control" type="number" min="1" placeholder="Nhập ID người dùng" />
+        </div>
+        <div class="col-12 col-md-3">
+            <label asp-for="Status" class="form-label">Trạng thái đặt sân</label>
+            <select asp-for="Status" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var option in Model.StatusOptions)
+                {
+                    <option value="@option" @(Model.IsStatusSelected(option) ? "selected" : string.Empty)>@option</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-3">
+            <label asp-for="PaymentStatus" class="form-label">Trạng thái thanh toán</label>
+            <select asp-for="PaymentStatus" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var option in Model.PaymentStatusOptions)
+                {
+                    <option value="@option" @(Model.IsPaymentStatusSelected(option) ? "selected" : string.Empty)>@option</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-3">
+            <label asp-for="From" class="form-label">Từ ngày</label>
+            <input asp-for="From" type="date" class="form-control" />
+        </div>
+        <div class="col-12 col-md-3">
+            <label asp-for="To" class="form-label">Đến ngày</label>
+            <input asp-for="To" type="date" class="form-control" />
+        </div>
+        <div class="col-12 col-md-3 align-self-end">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-2"></i>Lọc dữ liệu</button>
+                @if (Model.HasFilters)
+                {
+                    <a class="btn btn-outline-secondary" asp-page="/Bookings/History" asp-route-UserId="@Model.UserId">
+                        <i class="fa-solid fa-rotate-left me-2"></i>Xóa lọc
+                    </a>
+                }
+            </div>
+        </div>
+    </form>
+</section>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+else if (!Model.HasUserSelection)
+{
+    <div class="alert alert-soft" role="alert">
+        <i class="fa-solid fa-circle-info me-2"></i>Vui lòng nhập ID người dùng rồi bấm "Lọc dữ liệu" để xem lịch sử đặt sân.
+    </div>
+}
+else if (!Model.HasResults)
+{
+    <div class="empty-state text-center">
+        <i class="fa-solid fa-calendar-xmark fa-2x text-secondary mb-3"></i>
+        <p class="mb-1">Không tìm thấy lượt đặt sân nào phù hợp.</p>
+        @if (Model.HasFilters)
+        {
+            <p class="text-muted mb-0">Hãy thử bỏ bớt bộ lọc hoặc kiểm tra lại khoảng thời gian.</p>
+        }
+    </div>
+}
+else
+{
+    <section class="booking-summary mb-4">
+        <div class="booking-summary__card">
+            <div class="booking-summary__icon bg-primary-subtle text-primary">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+                <p class="booking-summary__label">Tổng lượt đặt</p>
+                <p class="booking-summary__value">@Model.ResultCount</p>
+            </div>
+        </div>
+        <div class="booking-summary__card">
+            <div class="booking-summary__icon bg-success-subtle text-success">
+                <i class="fa-solid fa-sack-dollar"></i>
+            </div>
+            <div>
+                <p class="booking-summary__label">Doanh thu đã thanh toán</p>
+                <p class="booking-summary__value">@Model.FormatCurrency(Model.TotalPaidAmount)</p>
+            </div>
+        </div>
+        <div class="booking-summary__card">
+            <div class="booking-summary__icon bg-warning-subtle text-warning">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+            <div>
+                <p class="booking-summary__label">Chờ thanh toán</p>
+                <p class="booking-summary__value">@Model.FormatCurrency(Model.TotalUnpaidAmount)</p>
+            </div>
+        </div>
+        <div class="booking-summary__card">
+            <div class="booking-summary__icon bg-info-subtle text-info">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+                <p class="booking-summary__label">Tổng giá trị</p>
+                <p class="booking-summary__value">@Model.FormatCurrency(Model.TotalAmount)</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="booking-breakdown h-100">
+                <h2 class="h6 mb-3 d-flex align-items-center gap-2"><i class="fa-solid fa-list-check text-primary"></i>Trạng thái đặt sân</h2>
+                @if (Model.HasStatusBreakdown)
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var pair in Model.StatusBreakdown)
+                        {
+                            <li class="d-flex justify-content-between align-items-center py-2">
+                                <span>@pair.Key</span>
+                                <span class="badge badge-soft-primary">@pair.Value</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Các lượt đặt hiện tại chưa có trạng thái cụ thể.</p>
+                }
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="booking-breakdown h-100">
+                <h2 class="h6 mb-3 d-flex align-items-center gap-2"><i class="fa-solid fa-credit-card text-success"></i>Trạng thái thanh toán</h2>
+                @if (Model.HasPaymentBreakdown)
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var pair in Model.PaymentBreakdown)
+                        {
+                            <li class="d-flex justify-content-between align-items-center py-2">
+                                <span>@pair.Key</span>
+                                <span class="badge badge-soft-success">@pair.Value</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Các lượt đặt hiện tại chưa cập nhật trạng thái thanh toán.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (Model.HasUpcomingBookings)
+    {
+        <div class="booking-upcoming mb-4">
+            <h2 class="h6 mb-3 d-flex align-items-center gap-2"><i class="fa-solid fa-clock text-warning"></i>Các lượt sắp diễn ra</h2>
+            <div class="row g-3">
+                @foreach (var booking in Model.UpcomingBookings)
+                {
+                    <div class="col-12 col-lg-4">
+                        <article class="booking-upcoming__card h-100">
+                            <header class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <h3 class="h6 mb-0">@Model.GetBookingTitle(booking)</h3>
+                                <span class="badge @Model.GetBookingStatusBadgeClass(booking.Status)">@Model.GetStatusLabel(booking.Status)</span>
+                            </header>
+                            <p class="text-muted small mb-1">
+                                <i class="fa-regular fa-calendar me-2"></i>@Model.FormatDate(booking.Date)
+                            </p>
+                            <p class="text-muted small mb-1">
+                                <i class="fa-regular fa-clock me-2"></i>@Model.FormatTimeRange(booking.StartTime, booking.EndTime)
+                            </p>
+                            <p class="text-muted small mb-3">
+                                <i class="fa-solid fa-location-dot me-2"></i>@Model.GetFacilityLine(booking)
+                            </p>
+                            <p class="fw-semibold mb-0">@Model.FormatCurrency(booking.TotalAmount)</p>
+                        </article>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <section class="booking-table card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Mã booking</th>
+                            <th scope="col">Thông tin</th>
+                            <th scope="col">Thời gian</th>
+                            <th scope="col">Thanh toán</th>
+                            <th scope="col">Giá trị</th>
+                            <th scope="col">Tạo lúc</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model.Bookings)
+                        {
+                            <tr>
+                                <td class="fw-semibold">#@booking.BookingId</td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="fw-semibold">@Model.GetBookingTitle(booking)</span>
+                                        <span class="text-muted small"><i class="fa-solid fa-location-arrow me-1"></i>@Model.GetFacilityLine(booking)</span>
+                                        @if (!string.IsNullOrWhiteSpace(booking.CustomerName))
+                                        {
+                                            <span class="text-muted small"><i class="fa-regular fa-user me-1"></i>@booking.CustomerName</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="badge @Model.GetBookingStatusBadgeClass(booking.Status)">@Model.GetStatusLabel(booking.Status)</span>
+                                        <span class="text-muted small"><i class="fa-regular fa-calendar me-1"></i>@Model.FormatDate(booking.Date)</span>
+                                        <span class="text-muted small"><i class="fa-regular fa-clock me-1"></i>@Model.FormatTimeRange(booking.StartTime, booking.EndTime)</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge @Model.GetPaymentStatusBadgeClass(booking.StatusPayment)">@Model.GetStatusLabel(booking.StatusPayment)</span>
+                                </td>
+                                <td class="fw-semibold">@Model.FormatCurrency(booking.TotalAmount)</td>
+                                <td class="text-muted small">@Model.FormatDateTime(booking.CreateAt)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
