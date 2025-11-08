@@ -39,7 +39,8 @@ public static class ServiceCollectionExtensions
         services.AddAutoMapper(
             typeof(MappingField).Assembly,
             typeof(MappingOrder).Assembly,
-            typeof(MappingBooking).Assembly);
+            typeof(MappingBooking).Assembly,
+            typeof(FacilityProfile).Assembly);
 
         services.AddMemoryCache();
         services.Configure<SendEmail>(configuration.GetSection("SendEmail"));
